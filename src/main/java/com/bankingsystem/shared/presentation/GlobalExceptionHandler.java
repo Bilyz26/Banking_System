@@ -1,13 +1,17 @@
 package com.bankingsystem.shared.presentation;
 
+import com.bankingsystem.account.application.AccountNotFoundException;
+import com.bankingsystem.customer.application.CustomerNotFoundException;
 import com.bankingsystem.customer.application.DuplicateCustomerEmailException;
 import com.bankingsystem.shared.application.ApplicationException;
 import com.bankingsystem.shared.domain.DomainException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -20,6 +24,14 @@ public final class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleDuplicateEmail(
             DuplicateCustomerEmailException exception) {
         return error(HttpStatus.CONFLICT, "CUSTOMER_EMAIL_ALREADY_EXISTS", exception.getMessage());
+    }
+
+    @ExceptionHandler({AccountNotFoundException.class, CustomerNotFoundException.class})
+    public ResponseEntity<ApiError> handleResourceNotFound(ApplicationException exception) {
+        String errorCode = exception instanceof AccountNotFoundException
+                ? "ACCOUNT_NOT_FOUND"
+                : "CUSTOMER_NOT_FOUND";
+        return error(HttpStatus.NOT_FOUND, errorCode, exception.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -35,6 +47,17 @@ public final class GlobalExceptionHandler {
                 "Request validation failed",
                 fieldErrors);
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler({
+            HttpMessageNotReadableException.class,
+            MethodArgumentTypeMismatchException.class
+    })
+    public ResponseEntity<ApiError> handleMalformedRequest(Exception exception) {
+        return error(
+                HttpStatus.BAD_REQUEST,
+                "MALFORMED_REQUEST",
+                "Request body or path parameter is malformed");
     }
 
     @ExceptionHandler({IllegalArgumentException.class, DomainException.class})
