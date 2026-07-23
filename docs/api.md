@@ -2,6 +2,11 @@
 
 All endpoints use the `/api/v1` prefix and exchange JSON.
 
+The machine-readable OpenAPI 3.1 contract is available at
+[`docs/openapi/banking-api.json`](openapi/banking-api.json). It is maintained
+as a reviewed source artifact and verified against the registered Spring routes
+during every build.
+
 ## Authentication and authorization
 
 When the `secure` profile is active, every endpoint requires an
