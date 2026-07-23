@@ -144,6 +144,7 @@ The current modular-monolith implementation includes:
 - overdraft prevention
 - atomic transfer application boundaries with paired ledger records
 - retry-safe deposits, withdrawals, and transfers using idempotency keys
+- cursor-paginated, newest-first account transaction history
 - optional OAuth 2.0 JWT authentication with scope-based authorization
 - health probes, Prometheus metrics, and request correlation IDs
 - reproducible CI verification and non-root container packaging

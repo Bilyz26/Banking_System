@@ -2,6 +2,7 @@ package com.bankingsystem.ledger.infrastructure;
 
 import com.bankingsystem.account.domain.AccountId;
 import com.bankingsystem.ledger.application.DuplicateLedgerEntryException;
+import com.bankingsystem.ledger.application.LedgerPagePosition;
 import com.bankingsystem.ledger.application.port.out.LedgerRepository;
 import com.bankingsystem.ledger.domain.LedgerEntry;
 import com.bankingsystem.ledger.domain.LedgerEntryId;
@@ -9,6 +10,7 @@ import com.bankingsystem.ledger.domain.LedgerTransactionId;
 import com.bankingsystem.ledger.domain.LedgerEntryType;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +22,11 @@ import java.util.Set;
  * Fast, non-durable append-only adapter used by the default development profile.
  */
 public final class InMemoryLedgerRepository implements LedgerRepository {
+
+    private static final Comparator<LedgerEntry> NEWEST_FIRST =
+            Comparator.comparing(LedgerEntry::occurredAt)
+                    .thenComparing(entry -> entry.id().value())
+                    .reversed();
 
     private final Map<LedgerEntryId, LedgerEntry> entriesById = new HashMap<>();
     private final Map<AccountId, List<LedgerEntry>> entriesByAccountId = new HashMap<>();
@@ -74,6 +81,34 @@ public final class InMemoryLedgerRepository implements LedgerRepository {
             LedgerTransactionId transactionId) {
         Objects.requireNonNull(transactionId, "transaction id must not be null");
         return List.copyOf(entriesByTransactionId.getOrDefault(transactionId, List.of()));
+    }
+
+    @Override
+    public synchronized List<LedgerEntry> findPageByAccountId(
+            AccountId accountId,
+            LedgerPagePosition position,
+            int limit) {
+        Objects.requireNonNull(accountId, "account id must not be null");
+        if (limit < 1) {
+            throw new IllegalArgumentException("limit must be greater than zero");
+        }
+        return entriesByAccountId.getOrDefault(accountId, List.of()).stream()
+                .filter(entry -> isAfterCursor(entry, position))
+                .sorted(NEWEST_FIRST)
+                .limit(limit)
+                .toList();
+    }
+
+    private static boolean isAfterCursor(
+            LedgerEntry entry,
+            LedgerPagePosition position) {
+        if (position == null) {
+            return true;
+        }
+        int timeComparison = entry.occurredAt().compareTo(position.occurredAt());
+        return timeComparison < 0
+                || (timeComparison == 0
+                && entry.id().value().compareTo(position.entryId().value()) < 0);
     }
 
     private record TransactionEntryType(

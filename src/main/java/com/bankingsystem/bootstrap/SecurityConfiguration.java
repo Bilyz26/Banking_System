@@ -39,7 +39,10 @@ public class SecurityConfiguration {
                                 "/actuator/metrics/**",
                                 "/actuator/prometheus")
                         .hasAuthority("SCOPE_banking.monitor")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/accounts/*")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/accounts/*",
+                                "/api/v1/accounts/*/transactions")
                         .hasAuthority("SCOPE_banking.read")
                         .requestMatchers(
                                 HttpMethod.POST,

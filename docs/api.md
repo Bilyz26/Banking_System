@@ -12,7 +12,7 @@ Required OAuth 2.0 scopes:
 
 | Scope | Operations |
 | --- | --- |
-| `banking.read` | Retrieve an account |
+| `banking.read` | Retrieve an account and its transaction history |
 | `banking.write` | Deposit, withdraw, and transfer money |
 | `banking.admin` | Create customers and accounts; freeze, unfreeze, and close accounts |
 | `banking.monitor` | Read application info, diagnostic metrics, and Prometheus metrics |
@@ -49,11 +49,19 @@ Otherwise, the server generates a UUID.
 
 - `POST /accounts` opens an account for an existing customer.
 - `GET /accounts/{accountId}` retrieves an account.
+- `GET /accounts/{accountId}/transactions` retrieves transaction history in
+  newest-first order.
 - `POST /accounts/{accountId}/freeze` freezes an active account.
 - `POST /accounts/{accountId}/unfreeze` reactivates a frozen account.
 - `POST /accounts/{accountId}/close` closes a zero-balance account.
 - `POST /accounts/{accountId}/deposits` deposits money.
 - `POST /accounts/{accountId}/withdrawals` withdraws money.
+
+Transaction history accepts an optional `limit` from 1 to 100 (default 20) and
+an optional opaque `cursor`. When `nextCursor` is present in a response, pass it
+unchanged as the next request's `cursor`. Clients must not parse or construct
+cursors. The stable sort key combines occurrence time and ledger-entry ID so
+entries with identical timestamps are not skipped or repeated.
 
 ## Transfers
 

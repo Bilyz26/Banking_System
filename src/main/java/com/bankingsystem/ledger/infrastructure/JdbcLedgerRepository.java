@@ -2,6 +2,7 @@ package com.bankingsystem.ledger.infrastructure;
 
 import com.bankingsystem.account.domain.AccountId;
 import com.bankingsystem.ledger.application.DuplicateLedgerEntryException;
+import com.bankingsystem.ledger.application.LedgerPagePosition;
 import com.bankingsystem.ledger.application.port.out.LedgerRepository;
 import com.bankingsystem.ledger.domain.LedgerEntry;
 import com.bankingsystem.ledger.domain.LedgerEntryId;
@@ -82,6 +83,44 @@ public final class JdbcLedgerRepository implements LedgerRepository {
                         """,
                 entryRowMapper(),
                 transactionId.value());
+    }
+
+    @Override
+    public List<LedgerEntry> findPageByAccountId(
+            AccountId accountId,
+            LedgerPagePosition position,
+            int limit) {
+        Objects.requireNonNull(accountId, "account id must not be null");
+        if (limit < 1) {
+            throw new IllegalArgumentException("limit must be greater than zero");
+        }
+        if (position == null) {
+            return jdbcTemplate.query(
+                    ENTRY_SELECT + """
+                            WHERE ledger_entries.account_id = ?
+                            ORDER BY occurred_at DESC, ledger_entry_id DESC
+                            LIMIT ?
+                            """,
+                    entryRowMapper(),
+                    accountId.value(),
+                    limit);
+        }
+        return jdbcTemplate.query(
+                ENTRY_SELECT + """
+                        WHERE ledger_entries.account_id = ?
+                          AND (
+                              occurred_at < ?
+                              OR (occurred_at = ? AND ledger_entry_id < ?)
+                          )
+                        ORDER BY occurred_at DESC, ledger_entry_id DESC
+                        LIMIT ?
+                        """,
+                entryRowMapper(),
+                accountId.value(),
+                Timestamp.from(position.occurredAt()),
+                Timestamp.from(position.occurredAt()),
+                position.entryId().value(),
+                limit);
     }
 
     private void insert(LedgerEntry entry) {
