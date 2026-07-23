@@ -1,4 +1,35 @@
 services:
+  application:
+    build:
+      context: .
+    environment:
+      SPRING_PROFILES_ACTIVE: ${BANKING_PROFILES:-postgresql}
+      BANKING_DB_URL: jdbc:postgresql://postgres:5432/banking
+      BANKING_DB_USERNAME: banking
+      BANKING_DB_PASSWORD: banking
+      BANKING_JWT_ISSUER_URI: ${BANKING_JWT_ISSUER_URI:-http://host.docker.internal:9000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --quiet
+        - --output-document=-
+        - http://localhost:8080/actuator/health/readiness
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   postgres:
     image: postgres:17-alpine
     environment:
