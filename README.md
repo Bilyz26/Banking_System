@@ -59,21 +59,21 @@ On Linux or macOS:
 ./mvnw clean verify
 ```
 
-The application currently exposes customer creation at
-`POST /api/v1/customers`. Additional features will be added in small, reviewable
-steps.
+The complete endpoint reference is available in
+[`docs/api.md`](docs/api.md).
 
 ## Current implementation
 
-Part 1, the framework-independent banking domain, includes:
+The current modular-monolith implementation includes:
 
 - immutable monetary values with currency-safe arithmetic
-- immutable customer identities and validated customer details
+- customer creation and in-memory customer storage
+- account opening, retrieval, and lifecycle management
 - account ownership, balances, deposits, withdrawals, and lifecycle rules
 - overdraft prevention
-- currency-safe transfers between accounts
-- focused unit tests for domain rules and failure cases
+- atomic transfer application boundaries with paired ledger records
+- REST endpoints with request validation and stable error responses
+- unit and end-to-end MockMvc tests
 
-Persistence, application use cases, and REST endpoints intentionally remain for
-later parts.
-# Banking_System
+The repositories are intentionally in-memory adapters. Durable PostgreSQL
+persistence remains a later phase.
