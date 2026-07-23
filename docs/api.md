@@ -5,7 +5,9 @@ All endpoints use the `/api/v1` prefix and exchange JSON.
 The machine-readable OpenAPI 3.1 contract is available at
 [`docs/openapi/banking-api.json`](openapi/banking-api.json). It is maintained
 as a reviewed source artifact and verified against the registered Spring routes
-during every build.
+during every build. REST record fields are also compared with their mapped
+OpenAPI schemas. CI publishes the verified contract as a seven-day build
+artifact named `banking-system-openapi-<commit-sha>`.
 
 ## Authentication and authorization
 
