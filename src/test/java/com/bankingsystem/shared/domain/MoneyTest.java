@@ -24,7 +24,21 @@ class MoneyTest {
 
     @Test
     void rejectsPrecisionBeyondTwoDecimalPlaces() {
-        assertThrows(ArithmeticException.class, () -> Money.of("1.001", "USD"));
+        assertThrows(
+                InvalidMonetaryPrecisionException.class,
+                () -> Money.of("1.001", "USD"));
+    }
+
+    @Test
+    void supportsCurrencySpecificMinorUnits() {
+        assertEquals("100", Money.of("100", "JPY").amount().toPlainString());
+        assertEquals("1.234", Money.of("1.234", "BHD").amount().toPlainString());
+    }
+
+    @Test
+    void rejectsFractionalAmountForZeroDecimalCurrency() {
+        assertThrows(
+                InvalidMonetaryPrecisionException.class,
+                () -> Money.of("100.50", "JPY"));
     }
 }
-
