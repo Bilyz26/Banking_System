@@ -53,6 +53,17 @@ Start PostgreSQL:
 docker compose up -d postgres
 ```
 
+Start the complete containerized application:
+
+```shell
+docker compose up --build
+```
+
+The application is available on port `8080` and PostgreSQL on port `5432`.
+Set `BANKING_PROFILES=postgresql,secure` and `BANKING_JWT_ISSUER_URI` to enable
+JWT security in the container. The default Compose credentials are for local
+development only and must be replaced by secret-managed values in production.
+
 Run the application with durable persistence:
 
 ```powershell
@@ -115,6 +126,13 @@ On Linux or macOS:
 The complete endpoint reference is available in
 [`docs/api.md`](docs/api.md).
 
+## Continuous integration
+
+The GitHub Actions workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+runs the Maven `verify` lifecycle with Java 21, uploads the executable JAR, and
+builds the production container image. Pull requests must pass this workflow
+before they are merged.
+
 ## Current implementation
 
 The current modular-monolith implementation includes:
@@ -128,6 +146,7 @@ The current modular-monolith implementation includes:
 - retry-safe deposits, withdrawals, and transfers using idempotency keys
 - optional OAuth 2.0 JWT authentication with scope-based authorization
 - health probes, Prometheus metrics, and request correlation IDs
+- reproducible CI verification and non-root container packaging
 - REST endpoints with request validation and stable error responses
 - unit and end-to-end MockMvc tests
 
