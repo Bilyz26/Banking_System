@@ -1,6 +1,7 @@
 package com.bankingsystem.shared.presentation;
 
 import com.bankingsystem.account.application.AccountNotFoundException;
+import com.bankingsystem.account.application.ConcurrentAccountModificationException;
 import com.bankingsystem.customer.application.CustomerNotFoundException;
 import com.bankingsystem.customer.application.DuplicateCustomerEmailException;
 import com.bankingsystem.shared.application.ApplicationException;
@@ -24,6 +25,15 @@ public final class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleDuplicateEmail(
             DuplicateCustomerEmailException exception) {
         return error(HttpStatus.CONFLICT, "CUSTOMER_EMAIL_ALREADY_EXISTS", exception.getMessage());
+    }
+
+    @ExceptionHandler(ConcurrentAccountModificationException.class)
+    public ResponseEntity<ApiError> handleConcurrentAccountModification(
+            ConcurrentAccountModificationException exception) {
+        return error(
+                HttpStatus.CONFLICT,
+                "CONCURRENT_ACCOUNT_MODIFICATION",
+                exception.getMessage());
     }
 
     @ExceptionHandler({AccountNotFoundException.class, CustomerNotFoundException.class})

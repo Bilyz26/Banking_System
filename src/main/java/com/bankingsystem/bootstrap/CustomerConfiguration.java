@@ -12,11 +12,13 @@ import com.bankingsystem.customer.domain.CustomerId;
 import com.bankingsystem.customer.infrastructure.InMemoryCustomerRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
 public class CustomerConfiguration {
 
     @Bean
+    @Profile("!postgresql")
     CustomerRepository customerRepository() {
         return new InMemoryCustomerRepository();
     }

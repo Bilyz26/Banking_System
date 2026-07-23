@@ -41,4 +41,11 @@ class MoneyTest {
                 InvalidMonetaryPrecisionException.class,
                 () -> Money.of("100.50", "JPY"));
     }
+
+    @Test
+    void rejectsAmountsOutsideSupportedStorageRange() {
+        assertThrows(
+                MonetaryAmountOutOfRangeException.class,
+                () -> Money.of("100000000000000000.00", "USD"));
+    }
 }

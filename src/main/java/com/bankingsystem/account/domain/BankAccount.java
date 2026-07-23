@@ -15,19 +15,25 @@ public final class BankAccount {
     private final CustomerId ownerId;
     private Money balance;
     private AccountStatus status;
+    private final long version;
 
     private BankAccount(
             AccountId id,
             CustomerId ownerId,
             Money balance,
-            AccountStatus status) {
+            AccountStatus status,
+            long version) {
         this.id = Objects.requireNonNull(id, "account id must not be null");
         this.ownerId = Objects.requireNonNull(ownerId, "owner id must not be null");
         this.balance = Objects.requireNonNull(balance, "balance must not be null");
         this.status = Objects.requireNonNull(status, "status must not be null");
+        this.version = version;
 
         if (balance.amount().signum() < 0) {
             throw new IllegalArgumentException("account balance must not be negative");
+        }
+        if (version < -1) {
+            throw new IllegalArgumentException("account version must not be less than -1");
         }
         if (status == AccountStatus.CLOSED && !balance.isZero()) {
             throw new NonZeroBalanceException();
@@ -43,7 +49,8 @@ public final class BankAccount {
                 accountId,
                 ownerId,
                 Money.zero(currency),
-                AccountStatus.ACTIVE);
+                AccountStatus.ACTIVE,
+                -1);
     }
 
     public static BankAccount restore(
@@ -51,7 +58,16 @@ public final class BankAccount {
             CustomerId ownerId,
             Money balance,
             AccountStatus status) {
-        return new BankAccount(accountId, ownerId, balance, status);
+        return restore(accountId, ownerId, balance, status, 0);
+    }
+
+    public static BankAccount restore(
+            AccountId accountId,
+            CustomerId ownerId,
+            Money balance,
+            AccountStatus status,
+            long version) {
+        return new BankAccount(accountId, ownerId, balance, status, version);
     }
 
     public void deposit(Money amount) {
@@ -131,5 +147,8 @@ public final class BankAccount {
     public AccountStatus status() {
         return status;
     }
-}
 
+    public long version() {
+        return version;
+    }
+}

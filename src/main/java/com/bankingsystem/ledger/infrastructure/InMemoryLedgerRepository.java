@@ -15,7 +15,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Temporary append-only adapter used until PostgreSQL is introduced.
+ * Fast, non-durable append-only adapter used by the default development profile.
  */
 public final class InMemoryLedgerRepository implements LedgerRepository {
 

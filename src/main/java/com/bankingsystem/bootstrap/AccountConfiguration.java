@@ -19,6 +19,7 @@ import com.bankingsystem.ledger.application.port.out.LedgerRepository;
 import com.bankingsystem.ledger.application.port.out.LedgerTransactionIdGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.time.Clock;
 
@@ -26,6 +27,7 @@ import java.time.Clock;
 public class AccountConfiguration {
 
     @Bean
+    @Profile("!postgresql")
     InMemoryAccountRepository accountRepository() {
         return new InMemoryAccountRepository();
     }
@@ -64,6 +66,7 @@ public class AccountConfiguration {
     }
 
     @Bean
+    @Profile("!postgresql")
     AccountOperationCommitter accountOperationCommitter(
             InMemoryAccountRepository accountRepository,
             LedgerRepository ledgerRepository) {
