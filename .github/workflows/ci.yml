@@ -41,6 +41,14 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Upload OpenAPI contract
+        uses: actions/upload-artifact@v4
+        with:
+          name: banking-system-openapi-${{ github.sha }}
+          path: docs/openapi/banking-api.json
+          if-no-files-found: error
+          retention-days: 7
+
   container:
     name: Build container image
     runs-on: ubuntu-latest
