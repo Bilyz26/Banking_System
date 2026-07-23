@@ -400,6 +400,7 @@
           "emailAddress": {
             "type": "string",
             "format": "email",
+            "minLength": 1,
             "maxLength": 320
           }
         }
@@ -663,6 +664,8 @@
       },
       "CurrencyCode": {
         "type": "string",
+        "minLength": 1,
+        "maxLength": 3,
         "pattern": "^[A-Z]{3}$",
         "example": "USD"
       },
@@ -673,6 +676,7 @@
       "PositiveAmount": {
         "type": "number",
         "exclusiveMinimum": 0,
+        "exclusiveMaximum": 100000000000000000,
         "multipleOf": 0.001
       }
     }
