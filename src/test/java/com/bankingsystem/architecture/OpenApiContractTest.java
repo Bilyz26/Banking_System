@@ -22,13 +22,21 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.RecordComponent;
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import tools.jackson.databind.JsonNode;
@@ -84,6 +92,24 @@ class OpenApiContractTest {
                         schemaPropertyNames(contract, schemaName),
                         () -> dtoType.getSimpleName()
                                 + " differs from OpenAPI schema " + schemaName));
+    }
+
+    @Test
+    void keepsDocumentedTypesFormatsAndEnumsAlignedWithRestDtos()
+            throws IOException {
+        JsonNode contract = readContract();
+
+        DTO_SCHEMAS.forEach((dtoType, schemaName) -> {
+            Map<String, JsonNode> schemaProperties =
+                    schemaProperties(contract, namedSchema(contract, schemaName));
+            for (RecordComponent component : dtoType.getRecordComponents()) {
+                assertCompatibleType(
+                        contract,
+                        component.getGenericType(),
+                        schemaProperties.get(component.getName()),
+                        dtoType.getSimpleName() + "." + component.getName());
+            }
+        });
     }
 
     private JsonNode readContract() throws IOException {
@@ -152,32 +178,130 @@ class OpenApiContractTest {
     private static Set<String> schemaPropertyNames(
             JsonNode contract,
             String schemaName) {
+        return schemaProperties(contract, namedSchema(contract, schemaName)).keySet();
+    }
+
+    private static JsonNode namedSchema(JsonNode contract, String schemaName) {
         JsonNode schema = contract.path("components").path("schemas").path(schemaName);
         assertTrue(!schema.isMissingNode(), () -> "Missing schema: " + schemaName);
+        return schema;
+    }
 
-        Set<String> properties = new HashSet<>();
+    private static Map<String, JsonNode> schemaProperties(
+            JsonNode contract,
+            JsonNode schema) {
+        Map<String, JsonNode> properties = new LinkedHashMap<>();
         collectSchemaProperties(contract, schema, properties);
-        return Set.copyOf(properties);
+        return Map.copyOf(properties);
     }
 
     private static void collectSchemaProperties(
             JsonNode contract,
             JsonNode schema,
-            Set<String> properties) {
-        schema.path("properties").propertyNames().forEach(properties::add);
-        schema.path("allOf").forEach(component -> {
-            JsonNode reference = component.path("$ref");
-            if (reference.isTextual()) {
-                String schemaName = reference.textValue()
-                        .substring(reference.textValue().lastIndexOf('/') + 1);
-                collectSchemaProperties(
-                        contract,
-                        contract.path("components").path("schemas").path(schemaName),
-                        properties);
-            } else {
-                collectSchemaProperties(contract, component, properties);
-            }
+            Map<String, JsonNode> properties) {
+        schema.path("properties").properties().forEach(property -> {
+            JsonNode previous = properties.put(property.getKey(), property.getValue());
+            assertTrue(previous == null, () -> "Duplicate schema property: " + property.getKey());
         });
+        schema.path("allOf").forEach(component -> {
+            collectSchemaProperties(contract, resolveSchema(contract, component), properties);
+        });
+    }
+
+    private static JsonNode resolveSchema(JsonNode contract, JsonNode schema) {
+        JsonNode reference = schema.path("$ref");
+        if (!reference.isTextual()) {
+            return schema;
+        }
+        String schemaName =
+                reference.textValue().substring(reference.textValue().lastIndexOf('/') + 1);
+        return resolveSchema(contract, namedSchema(contract, schemaName));
+    }
+
+    private static void assertCompatibleType(
+            JsonNode contract,
+            Type javaType,
+            JsonNode documentedSchema,
+            String fieldName) {
+        assertTrue(documentedSchema != null, () -> "Missing schema property for " + fieldName);
+        JsonNode schema = resolveSchema(contract, documentedSchema);
+        Class<?> rawType = rawType(javaType);
+        String expectedType = expectedOpenApiType(rawType);
+
+        assertTrue(
+                documentedTypes(schema).contains(expectedType),
+                () -> fieldName + " expects OpenAPI type " + expectedType
+                        + " but documents " + documentedTypes(schema));
+
+        String expectedFormat = expectedFormat(rawType);
+        if (expectedFormat != null) {
+            assertEquals(expectedFormat, schema.path("format").textValue(), fieldName);
+        }
+
+        if (rawType.isEnum()) {
+            Set<String> javaValues = Arrays.stream(rawType.getEnumConstants())
+                    .map(Object::toString)
+                    .collect(Collectors.toUnmodifiableSet());
+            Set<String> documentedValues = new HashSet<>();
+            schema.path("enum").forEach(value -> documentedValues.add(value.textValue()));
+            assertEquals(javaValues, documentedValues, fieldName);
+        }
+
+        if (List.class.isAssignableFrom(rawType)) {
+            Type itemType = ((ParameterizedType) javaType).getActualTypeArguments()[0];
+            assertCompatibleType(contract, itemType, schema.path("items"), fieldName + "[]");
+        }
+    }
+
+    private static Class<?> rawType(Type javaType) {
+        if (javaType instanceof Class<?> type) {
+            return type;
+        }
+        if (javaType instanceof ParameterizedType parameterizedType
+                && parameterizedType.getRawType() instanceof Class<?> type) {
+            return type;
+        }
+        throw new IllegalArgumentException("Unsupported REST field type: " + javaType);
+    }
+
+    private static String expectedOpenApiType(Class<?> javaType) {
+        if (javaType == String.class || javaType == UUID.class
+                || javaType == Instant.class || javaType.isEnum()) {
+            return "string";
+        }
+        if (javaType == BigDecimal.class) {
+            return "number";
+        }
+        if (javaType == int.class || javaType == Integer.class) {
+            return "integer";
+        }
+        if (List.class.isAssignableFrom(javaType)) {
+            return "array";
+        }
+        if (Map.class.isAssignableFrom(javaType) || javaType.isRecord()) {
+            return "object";
+        }
+        throw new IllegalArgumentException("Unsupported REST field type: " + javaType.getName());
+    }
+
+    private static String expectedFormat(Class<?> javaType) {
+        if (javaType == UUID.class) {
+            return "uuid";
+        }
+        if (javaType == Instant.class) {
+            return "date-time";
+        }
+        return null;
+    }
+
+    private static Set<String> documentedTypes(JsonNode schema) {
+        JsonNode type = schema.path("type");
+        if (type.isTextual()) {
+            return Set.of(type.textValue());
+        }
+        Set<String> types = new HashSet<>();
+        type.forEach(value -> types.add(value.textValue()));
+        return Set.copyOf(types);
     }
 
     private static String operation(String method, String path) {

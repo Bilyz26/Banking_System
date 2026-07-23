@@ -7,7 +7,9 @@ The machine-readable OpenAPI 3.1 contract is available at
 as a reviewed source artifact and verified against the registered Spring routes
 during every build. REST record fields are also compared with their mapped
 OpenAPI schemas. CI publishes the verified contract as a seven-day build
-artifact named `banking-system-openapi-<commit-sha>`.
+artifact named `banking-system-openapi-<commit-sha>`. Java field types, UUID
+and timestamp formats, collection items, and enum values are checked against
+the same schemas.
 
 ## Authentication and authorization
 
