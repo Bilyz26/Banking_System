@@ -10,6 +10,7 @@ import com.bankingsystem.ledger.domain.LedgerTransactionId;
 import com.bankingsystem.shared.domain.Money;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.sql.Timestamp;
@@ -19,6 +20,13 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class JdbcLedgerRepository implements LedgerRepository {
+
+    private static final String ENTRY_SELECT = """
+            SELECT ledger_entry_id, transaction_id, ledger_entries.account_id, entry_type,
+                   amount, balance_after, occurred_at, description, accounts.currency_code
+            FROM ledger_entries
+            JOIN accounts ON accounts.account_id = ledger_entries.account_id
+            """;
 
     private final JdbcTemplate jdbcTemplate;
     private final TransactionTemplate transactionTemplate;
@@ -56,30 +64,24 @@ public final class JdbcLedgerRepository implements LedgerRepository {
     public List<LedgerEntry> findByAccountId(AccountId accountId) {
         Objects.requireNonNull(accountId, "account id must not be null");
         return jdbcTemplate.query(
-                """
-                SELECT ledger_entry_id, transaction_id, ledger_entries.account_id, entry_type,
-                       amount, balance_after, occurred_at, description, accounts.currency_code
-                FROM ledger_entries
-                JOIN accounts ON accounts.account_id = ledger_entries.account_id
-                WHERE ledger_entries.account_id = ?
-                ORDER BY occurred_at, ledger_entry_id
-                """,
-                (resultSet, rowNumber) -> new LedgerEntry(
-                        new LedgerEntryId(
-                                resultSet.getObject("ledger_entry_id", UUID.class)),
-                        new LedgerTransactionId(
-                                resultSet.getObject("transaction_id", UUID.class)),
-                        new AccountId(resultSet.getObject("account_id", UUID.class)),
-                        LedgerEntryType.valueOf(resultSet.getString("entry_type")),
-                        new Money(
-                                resultSet.getBigDecimal("amount"),
-                                Currency.getInstance(resultSet.getString("currency_code"))),
-                        new Money(
-                                resultSet.getBigDecimal("balance_after"),
-                                Currency.getInstance(resultSet.getString("currency_code"))),
-                        resultSet.getTimestamp("occurred_at").toInstant(),
-                        resultSet.getString("description")),
+                ENTRY_SELECT + """
+                        WHERE ledger_entries.account_id = ?
+                        ORDER BY occurred_at, ledger_entry_id
+                        """,
+                entryRowMapper(),
                 accountId.value());
+    }
+
+    @Override
+    public List<LedgerEntry> findByTransactionId(LedgerTransactionId transactionId) {
+        Objects.requireNonNull(transactionId, "transaction id must not be null");
+        return jdbcTemplate.query(
+                ENTRY_SELECT + """
+                        WHERE transaction_id = ?
+                        ORDER BY entry_type, ledger_entry_id
+                        """,
+                entryRowMapper(),
+                transactionId.value());
     }
 
     private void insert(LedgerEntry entry) {
@@ -101,4 +103,19 @@ public final class JdbcLedgerRepository implements LedgerRepository {
                 entry.description());
     }
 
+    private static RowMapper<LedgerEntry> entryRowMapper() {
+        return (resultSet, rowNumber) -> new LedgerEntry(
+                new LedgerEntryId(resultSet.getObject("ledger_entry_id", UUID.class)),
+                new LedgerTransactionId(resultSet.getObject("transaction_id", UUID.class)),
+                new AccountId(resultSet.getObject("account_id", UUID.class)),
+                LedgerEntryType.valueOf(resultSet.getString("entry_type")),
+                new Money(
+                        resultSet.getBigDecimal("amount"),
+                        Currency.getInstance(resultSet.getString("currency_code"))),
+                new Money(
+                        resultSet.getBigDecimal("balance_after"),
+                        Currency.getInstance(resultSet.getString("currency_code"))),
+                resultSet.getTimestamp("occurred_at").toInstant(),
+                resultSet.getString("description"));
+    }
 }

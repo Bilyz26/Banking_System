@@ -19,6 +19,7 @@ import com.bankingsystem.ledger.domain.LedgerEntryType;
 import com.bankingsystem.ledger.domain.LedgerTransactionId;
 import com.bankingsystem.ledger.domain.TransferLedgerEntries;
 import com.bankingsystem.shared.domain.Money;
+import com.bankingsystem.shared.application.IdempotencyConflictException;
 import com.bankingsystem.transfer.application.port.out.TransferCommitter;
 import com.bankingsystem.transfer.domain.TransferService;
 import org.junit.jupiter.api.BeforeEach;
@@ -137,6 +138,34 @@ class PostgresqlPersistenceIntegrationTest {
         assertThrows(
                 ConcurrentAccountModificationException.class,
                 () -> accountRepository.save(collidingAccount));
+    }
+
+    @Test
+    void persistsAndReplaysAnIdempotentDeposit() {
+        accountRepository.save(account(SOURCE_ACCOUNT_ID, "0.00"));
+        LedgerTransactionId idempotencyKey = new LedgerTransactionId(
+                UUID.fromString("ac22b7e1-ad65-48cb-85bc-6f25af04320f"));
+        DepositMoneyCommand command = new DepositMoneyCommand(
+                SOURCE_ACCOUNT_ID,
+                Money.of("25.00", "USD"),
+                "Persistent retry",
+                idempotencyKey);
+
+        var firstResult = depositMoneyUseCase.deposit(command);
+        var retriedResult = depositMoneyUseCase.deposit(command);
+
+        assertEquals(firstResult, retriedResult);
+        assertEquals(
+                Money.of("25.00", "USD"),
+                accountRepository.findById(SOURCE_ACCOUNT_ID).orElseThrow().balance());
+        assertEquals(1, ledgerRepository.findByTransactionId(idempotencyKey).size());
+        assertThrows(
+                IdempotencyConflictException.class,
+                () -> depositMoneyUseCase.deposit(new DepositMoneyCommand(
+                        SOURCE_ACCOUNT_ID,
+                        Money.of("30.00", "USD"),
+                        "Persistent retry",
+                        idempotencyKey)));
     }
 
     @Test

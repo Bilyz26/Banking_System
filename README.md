@@ -90,6 +90,7 @@ The current modular-monolith implementation includes:
 - account ownership, balances, deposits, withdrawals, and lifecycle rules
 - overdraft prevention
 - atomic transfer application boundaries with paired ledger records
+- retry-safe deposits, withdrawals, and transfers using idempotency keys
 - REST endpoints with request validation and stable error responses
 - unit and end-to-end MockMvc tests
 

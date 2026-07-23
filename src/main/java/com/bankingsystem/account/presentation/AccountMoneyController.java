@@ -5,12 +5,14 @@ import com.bankingsystem.account.application.port.in.DepositMoneyUseCase;
 import com.bankingsystem.account.application.port.in.WithdrawMoneyCommand;
 import com.bankingsystem.account.application.port.in.WithdrawMoneyUseCase;
 import com.bankingsystem.account.domain.AccountId;
+import com.bankingsystem.ledger.domain.LedgerTransactionId;
 import com.bankingsystem.shared.domain.Money;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Objects;
@@ -37,23 +39,27 @@ public final class AccountMoneyController {
     @PostMapping("/deposits")
     public MoneyOperationResponse deposit(
             @PathVariable UUID accountId,
+            @RequestHeader("Idempotency-Key") UUID idempotencyKey,
             @Valid @RequestBody MoneyOperationRequest request) {
         return MoneyOperationResponse.from(depositMoneyUseCase.deposit(
                 new DepositMoneyCommand(
                         new AccountId(accountId),
                         money(request),
-                        request.description())));
+                        request.description(),
+                        new LedgerTransactionId(idempotencyKey))));
     }
 
     @PostMapping("/withdrawals")
     public MoneyOperationResponse withdraw(
             @PathVariable UUID accountId,
+            @RequestHeader("Idempotency-Key") UUID idempotencyKey,
             @Valid @RequestBody MoneyOperationRequest request) {
         return MoneyOperationResponse.from(withdrawMoneyUseCase.withdraw(
                 new WithdrawMoneyCommand(
                         new AccountId(accountId),
                         money(request),
-                        request.description())));
+                        request.description(),
+                        new LedgerTransactionId(idempotencyKey))));
     }
 
     private static Money money(MoneyOperationRequest request) {
