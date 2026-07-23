@@ -44,7 +44,7 @@ public final class GlobalExceptionHandler {
 
     @ExceptionHandler(ApplicationException.class)
     public ResponseEntity<ApiError> handleApplicationFailure(ApplicationException exception) {
-        return error(HttpStatus.UNPROCESSABLE_ENTITY, "APPLICATION_RULE_VIOLATION", exception.getMessage());
+        return error(HttpStatus.UNPROCESSABLE_CONTENT, "APPLICATION_RULE_VIOLATION", exception.getMessage());
     }
 
     private static ResponseEntity<ApiError> error(
@@ -59,4 +59,3 @@ public final class GlobalExceptionHandler {
                 Map.of()));
     }
 }
-

@@ -24,16 +24,44 @@ Detailed architectural decisions are recorded in
 ## Requirements
 
 - Java 21
-- Maven 3.6.3 or newer
+
+`JAVA_HOME` must point to the Java 21 installation, or Java must be available on
+the system `PATH`.
 
 ## Running locally
 
-```shell
-mvn spring-boot:run
+On Windows:
+
+```powershell
+.\mvnw.cmd spring-boot:run
 ```
 
-The application has no banking endpoints yet. Features will be added in small,
-reviewable steps.
+On Linux or macOS:
+
+```shell
+./mvnw spring-boot:run
+```
+
+The Maven Wrapper downloads the project-pinned Maven version automatically, so a
+global Maven installation is not required.
+
+## Verifying the project
+
+On Windows:
+
+```powershell
+.\mvnw.cmd clean verify
+```
+
+On Linux or macOS:
+
+```shell
+./mvnw clean verify
+```
+
+The application currently exposes customer creation at
+`POST /api/v1/customers`. Additional features will be added in small, reviewable
+steps.
 
 ## Current implementation
 
