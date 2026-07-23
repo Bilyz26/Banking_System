@@ -24,7 +24,7 @@ Required OAuth 2.0 scopes:
 | --- | --- |
 | `banking.read` | Retrieve customers, accounts, and account transaction history |
 | `banking.write` | Deposit, withdraw, and transfer money |
-| `banking.admin` | Create customers and accounts; freeze, unfreeze, and close accounts |
+| `banking.admin` | Create and update customers; create, freeze, unfreeze, and close accounts |
 | `banking.monitor` | Read application info, diagnostic metrics, and Prometheus metrics |
 
 Missing or invalid authentication returns `401` with
@@ -55,6 +55,7 @@ Otherwise, the server generates a UUID.
 
 - `POST /customers` creates a customer.
 - `GET /customers/{customerId}` retrieves a customer.
+- `PUT /customers/{customerId}` replaces a customer's editable profile.
 
 ## Accounts
 

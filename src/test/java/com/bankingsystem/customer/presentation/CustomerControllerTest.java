@@ -2,6 +2,7 @@ package com.bankingsystem.customer.presentation;
 
 import com.bankingsystem.customer.application.port.in.CreateCustomerResult;
 import com.bankingsystem.customer.application.port.in.GetCustomerResult;
+import com.bankingsystem.customer.application.port.in.UpdateCustomerProfileResult;
 import com.bankingsystem.customer.domain.CustomerId;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,19 @@ class CustomerControllerTest {
         assertEquals("ada@example.com", response.emailAddress());
     }
 
+    @Test
+    void returnsUpdatedCustomer() {
+        CustomerResponse response = controller().updateCustomerProfile(
+                CUSTOMER_ID,
+                new UpdateCustomerProfileRequest(
+                        "Augusta Ada King",
+                        "ada.king@example.com"));
+
+        assertEquals(CUSTOMER_ID, response.customerId());
+        assertEquals("Augusta Ada King", response.fullName());
+        assertEquals("ada.king@example.com", response.emailAddress());
+    }
+
     private static CustomerController controller() {
         return new CustomerController(
                 command -> new CreateCustomerResult(
@@ -45,6 +59,10 @@ class CustomerControllerTest {
                 query -> new GetCustomerResult(
                         query.customerId(),
                         "Ada Lovelace",
-                        "ada@example.com"));
+                        "ada@example.com"),
+                command -> new UpdateCustomerProfileResult(
+                        command.customerId(),
+                        command.fullName().trim(),
+                        command.emailAddress().trim().toLowerCase()));
     }
 }

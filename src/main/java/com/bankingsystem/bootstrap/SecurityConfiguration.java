@@ -59,6 +59,10 @@ public class SecurityConfiguration {
                                 "/api/v1/accounts/*/unfreeze",
                                 "/api/v1/accounts/*/close")
                         .hasAuthority("SCOPE_banking.admin")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/v1/customers/*")
+                        .hasAuthority("SCOPE_banking.admin")
                         .anyRequest()
                         .denyAll())
                 .exceptionHandling(exceptions -> exceptions

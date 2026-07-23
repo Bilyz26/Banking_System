@@ -28,7 +28,7 @@ its tests and documentation are updated.
 | 7 | Complete Transfer and Transaction-History Use Cases | Complete | Atomic transfers and cursor-paginated history are implemented. |
 | 8 | Integrate PostgreSQL, JPA, and Flyway | Complete | PostgreSQL and Flyway use explicit JDBC; ADR 0007 accepts JDBC as the JPA substitution. |
 | 9 | Add Atomic Transactions and Concurrency Protection | Complete | Database transactions, optimistic locking, and idempotency protection are implemented. |
-| 10 | Complete Customer REST Endpoints | In progress | Create and retrieve exist; the update-profile endpoint remains. |
+| 10 | Complete Customer REST Endpoints | Complete | Create, retrieve, and update-profile endpoints are implemented and documented. |
 | 11 | Complete Account REST Endpoints | Complete | Open, retrieve, freeze, unfreeze, and close endpoints exist. |
 | 12 | Complete Deposit, Withdrawal, and Transfer Endpoints | Complete | All three money-operation endpoints are implemented. |
 | 13 | Standardize Validation and API Error Handling | Complete | Request validation and stable structured errors are implemented. |
@@ -47,11 +47,10 @@ its tests and documentation are updated.
 
 The remaining work through Phase 19 will be completed in this order:
 
-1. Complete the customer update REST endpoint for Phase 10.
-2. Add architecture rules and static-analysis gates for Phase 18.
-3. Add production-like PostgreSQL and secured E2E testing for Phase 17.
-4. Add runtime Swagger UI for Phase 14.
-5. Finish secured Docker-based local deployment for Phase 19.
+1. Add architecture rules and static-analysis gates for Phase 18.
+2. Add production-like PostgreSQL and secured E2E testing for Phase 17.
+3. Add runtime Swagger UI for Phase 14.
+4. Finish secured Docker-based local deployment for Phase 19.
 
 Each recovery item receives focused tests, documentation, a dedicated branch,
 and a passing continuous-integration run.
