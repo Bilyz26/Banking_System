@@ -25,7 +25,11 @@ class InMemoryAccountRepositoryTest {
 
         repository.save(account);
 
-        assertEquals(account, repository.findById(accountId).orElseThrow());
+        BankAccount restoredAccount = repository.findById(accountId).orElseThrow();
+        assertEquals(account.id(), restoredAccount.id());
+        assertEquals(account.ownerId(), restoredAccount.ownerId());
+        assertEquals(account.balance(), restoredAccount.balance());
+        assertEquals(account.status(), restoredAccount.status());
         assertTrue(repository.findById(AccountId.generate()).isEmpty());
     }
 }

@@ -19,13 +19,21 @@ public final class InMemoryAccountRepository implements AccountRepository {
     @Override
     public synchronized Optional<BankAccount> findById(AccountId accountId) {
         Objects.requireNonNull(accountId, "account id must not be null");
-        return Optional.ofNullable(accounts.get(accountId));
+        return Optional.ofNullable(accounts.get(accountId)).map(this::copy);
     }
 
     @Override
     public synchronized void save(BankAccount account) {
         Objects.requireNonNull(account, "account must not be null");
-        accounts.put(account.id(), account);
+        accounts.put(account.id(), copy(account));
+    }
+
+    private BankAccount copy(BankAccount account) {
+        return BankAccount.restore(
+                account.id(),
+                account.ownerId(),
+                account.balance(),
+                account.status());
     }
 }
 
