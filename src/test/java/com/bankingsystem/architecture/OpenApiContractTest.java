@@ -8,6 +8,7 @@ import com.bankingsystem.account.presentation.OpenAccountRequest;
 import com.bankingsystem.bootstrap.BankingSystemApplication;
 import com.bankingsystem.customer.presentation.CreateCustomerRequest;
 import com.bankingsystem.customer.presentation.CreateCustomerResponse;
+import com.bankingsystem.customer.presentation.CustomerResponse;
 import com.bankingsystem.ledger.presentation.AccountTransactionPageResponse;
 import com.bankingsystem.ledger.presentation.AccountTransactionResponse;
 import com.bankingsystem.shared.presentation.ApiError;
@@ -62,6 +63,7 @@ class OpenApiContractTest {
     private static final Map<Class<?>, String> DTO_SCHEMAS = Map.ofEntries(
             Map.entry(CreateCustomerRequest.class, "CreateCustomerRequest"),
             Map.entry(CreateCustomerResponse.class, "Customer"),
+            Map.entry(CustomerResponse.class, "Customer"),
             Map.entry(OpenAccountRequest.class, "OpenAccountRequest"),
             Map.entry(AccountResponse.class, "Account"),
             Map.entry(AccountStatusResponse.class, "AccountStatus"),

@@ -57,6 +57,39 @@
         }
       }
     },
+    "/customers/{customerId}": {
+      "parameters": [
+        {
+          "name": "customerId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getCustomer",
+        "summary": "Retrieve a customer",
+        "x-required-scope": "banking.read",
+        "responses": {
+          "200": {
+            "description": "Customer found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
     "/accounts": {
       "post": {
         "operationId": "openAccount",
