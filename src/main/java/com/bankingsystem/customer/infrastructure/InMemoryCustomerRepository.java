@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Temporary adapter used until the PostgreSQL repository is introduced.
+ * Fast, non-durable adapter used by the default development profile.
  */
 public final class InMemoryCustomerRepository implements CustomerRepository {
 

@@ -45,6 +45,24 @@ On Linux or macOS:
 The Maven Wrapper downloads the project-pinned Maven version automatically, so a
 global Maven installation is not required.
 
+## Running with PostgreSQL
+
+Start PostgreSQL:
+
+```shell
+docker compose up -d postgres
+```
+
+Run the application with durable persistence:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=postgresql"
+```
+
+The profile reads `BANKING_DB_URL`, `BANKING_DB_USERNAME`,
+`BANKING_DB_PASSWORD`, and `BANKING_DB_POOL_SIZE`. The defaults match
+[`compose.yml`](compose.yml). Flyway applies pending migrations at startup.
+
 ## Verifying the project
 
 On Windows:
@@ -75,5 +93,6 @@ The current modular-monolith implementation includes:
 - REST endpoints with request validation and stable error responses
 - unit and end-to-end MockMvc tests
 
-The repositories are intentionally in-memory adapters. Durable PostgreSQL
-persistence remains a later phase.
+The default profile uses in-memory adapters for quick local work. The
+`postgresql` profile provides durable JDBC repositories, Flyway migrations,
+optimistic account locking, and database transaction boundaries.

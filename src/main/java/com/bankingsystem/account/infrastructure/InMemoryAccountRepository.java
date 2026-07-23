@@ -1,5 +1,6 @@
 package com.bankingsystem.account.infrastructure;
 
+import com.bankingsystem.account.application.ConcurrentAccountModificationException;
 import com.bankingsystem.account.application.port.out.AccountRepository;
 import com.bankingsystem.account.domain.AccountId;
 import com.bankingsystem.account.domain.BankAccount;
@@ -11,7 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Temporary adapter used until the PostgreSQL repository is introduced.
+ * Fast, non-durable adapter used by the default development profile.
  */
 public final class InMemoryAccountRepository implements AccountRepository {
 
@@ -26,24 +27,42 @@ public final class InMemoryAccountRepository implements AccountRepository {
     @Override
     public synchronized void save(BankAccount account) {
         Objects.requireNonNull(account, "account must not be null");
-        accounts.put(account.id(), copy(account));
+        BankAccount storedAccount = accounts.get(account.id());
+        if (storedAccount != null && storedAccount.version() != account.version()) {
+            throw new ConcurrentAccountModificationException(account.id());
+        }
+        long storedVersion =
+                storedAccount == null ? Math.max(0, account.version()) : account.version() + 1;
+        accounts.put(account.id(), copy(account, storedVersion));
     }
 
     public synchronized void saveAll(BankAccount... accountsToSave) {
         Objects.requireNonNull(accountsToSave, "accounts to save must not be null");
         List<BankAccount> snapshots = java.util.Arrays.stream(accountsToSave)
-                .map(account -> copy(Objects.requireNonNull(
+                .map(account -> Objects.requireNonNull(
                         account,
-                        "account to save must not be null")))
+                        "account to save must not be null"))
+                .map(account -> copy(account, account.version() + 1))
                 .toList();
+        for (BankAccount account : accountsToSave) {
+            BankAccount storedAccount = accounts.get(account.id());
+            if (storedAccount == null || storedAccount.version() != account.version()) {
+                throw new ConcurrentAccountModificationException(account.id());
+            }
+        }
         snapshots.forEach(account -> accounts.put(account.id(), account));
     }
 
     private BankAccount copy(BankAccount account) {
+        return copy(account, account.version());
+    }
+
+    private BankAccount copy(BankAccount account, long version) {
         return BankAccount.restore(
                 account.id(),
                 account.ownerId(),
                 account.balance(),
-                account.status());
+                account.status(),
+                version);
     }
 }

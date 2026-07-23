@@ -10,6 +10,8 @@ import java.util.Objects;
  */
 public record Money(BigDecimal amount, Currency currency) implements Comparable<Money> {
 
+    private static final int MAX_INTEGER_DIGITS = 17;
+
     public Money {
         Objects.requireNonNull(amount, "amount must not be null");
         Objects.requireNonNull(currency, "currency must not be null");
@@ -23,6 +25,10 @@ public record Money(BigDecimal amount, Currency currency) implements Comparable<
             amount = amount.setScale(currencyScale, RoundingMode.UNNECESSARY);
         } catch (ArithmeticException exception) {
             throw new InvalidMonetaryPrecisionException(amount, currency, currencyScale);
+        }
+        int integerDigits = amount.precision() - amount.scale();
+        if (integerDigits > MAX_INTEGER_DIGITS) {
+            throw new MonetaryAmountOutOfRangeException(MAX_INTEGER_DIGITS);
         }
     }
 

@@ -12,6 +12,7 @@ import com.bankingsystem.transfer.domain.TransferService;
 import com.bankingsystem.transfer.infrastructure.InMemoryTransferCommitter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.time.Clock;
 
@@ -24,6 +25,7 @@ public class TransferConfiguration {
     }
 
     @Bean
+    @Profile("!postgresql")
     TransferCommitter transferCommitter(
             InMemoryAccountRepository accountRepository,
             LedgerRepository ledgerRepository) {
