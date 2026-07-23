@@ -15,10 +15,31 @@ Required OAuth 2.0 scopes:
 | `banking.read` | Retrieve an account |
 | `banking.write` | Deposit, withdraw, and transfer money |
 | `banking.admin` | Create customers and accounts; freeze, unfreeze, and close accounts |
+| `banking.monitor` | Read application info, diagnostic metrics, and Prometheus metrics |
 
 Missing or invalid authentication returns `401` with
 `AUTHENTICATION_REQUIRED`. A valid token without the required scope returns
 `403` with `INSUFFICIENT_SCOPE`.
+
+## Operational endpoints
+
+The following endpoints are exposed outside the `/api/v1` prefix:
+
+- `GET /actuator/health`
+- `GET /actuator/health/liveness`
+- `GET /actuator/health/readiness`
+- `GET /actuator/info`
+- `GET /actuator/metrics`
+- `GET /actuator/metrics/{metricName}`
+- `GET /actuator/prometheus`
+
+Health responses never expose component details. Under the `secure` profile,
+health probes are anonymous so an orchestrator can determine availability.
+Other operational endpoints require `banking.monitor`.
+
+Every response includes `X-Correlation-ID`. A caller-supplied value is accepted
+when it contains 1–64 ASCII letters, digits, dots, underscores, or hyphens.
+Otherwise, the server generates a UUID.
 
 ## Customers
 

@@ -83,6 +83,21 @@ development. Do not expose it to an untrusted network. The `secure` profile
 validates bearer JWTs and enforces the scopes documented in
 [`docs/api.md`](docs/api.md).
 
+## Observability
+
+Operational endpoints are available under `/actuator`:
+
+- `/actuator/health`, `/actuator/health/liveness`, and
+  `/actuator/health/readiness`
+- `/actuator/info`
+- `/actuator/metrics`
+- `/actuator/prometheus`
+
+With the `secure` profile, health probes remain public while info, metrics, and
+Prometheus require `banking.monitor`. Every HTTP response contains an
+`X-Correlation-ID`; callers may supply a safe value or let the application
+generate one. The same value is included in application log lines.
+
 ## Verifying the project
 
 On Windows:
@@ -112,6 +127,7 @@ The current modular-monolith implementation includes:
 - atomic transfer application boundaries with paired ledger records
 - retry-safe deposits, withdrawals, and transfers using idempotency keys
 - optional OAuth 2.0 JWT authentication with scope-based authorization
+- health probes, Prometheus metrics, and request correlation IDs
 - REST endpoints with request validation and stable error responses
 - unit and end-to-end MockMvc tests
 

@@ -45,6 +45,21 @@ class ApiSecurityIntegrationTest {
     }
 
     @Test
+    void allowsAnonymousHealthProbeButProtectsMetrics() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+
+        mockMvc.perform(get("/actuator/metrics"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
+
+        mockMvc.perform(get("/actuator/metrics")
+                        .with(scope("banking.monitor")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void rejectsTokenWithoutRequiredScope() throws Exception {
         mockMvc.perform(get("/api/v1/accounts/{accountId}", UUID.randomUUID())
                         .with(scope("banking.write")))
