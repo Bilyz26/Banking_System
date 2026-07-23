@@ -12,7 +12,8 @@ adapter.
 ## Decision
 
 - Represent money with immutable `BigDecimal` amounts and ISO currencies.
-- Reject amounts with more than two decimal places instead of rounding silently.
+- Derive allowed monetary precision from the currency minor unit and reject
+  excess precision instead of rounding silently.
 - Give each customer and account an immutable UUID-based identity.
 - Allow account balance changes only through behavior on `BankAccount`.
 - Prevent overdrafts and cross-currency account operations.
@@ -28,5 +29,5 @@ adapter.
   operation.
 - Database transactions and concurrency control are still required when
   persistence is introduced.
-- Supporting currencies with non-two-decimal minor units would require replacing
-  the current fixed-scale policy.
+- Currency support depends on Java's ISO currency metadata defining a non-negative
+  minor-unit precision.

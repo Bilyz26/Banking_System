@@ -21,8 +21,35 @@ class CustomerTest {
     @Test
     void rejectsInvalidEmailAddress() {
         assertThrows(
-                IllegalArgumentException.class,
+                InvalidCustomerProfileException.class,
                 () -> new Customer(CustomerId.generate(), "Ada Lovelace", "invalid"));
     }
-}
 
+    @Test
+    void rejectsBlankCustomerDetails() {
+        assertThrows(
+                InvalidCustomerProfileException.class,
+                () -> new Customer(CustomerId.generate(), " ", "ada@example.com"));
+        assertThrows(
+                InvalidCustomerProfileException.class,
+                () -> new Customer(CustomerId.generate(), "Ada Lovelace", " "));
+    }
+
+    @Test
+    void enforcesDomainLengthLimits() {
+        assertThrows(
+                InvalidCustomerProfileException.class,
+                () -> new Customer(
+                        CustomerId.generate(),
+                        "A".repeat(201),
+                        "ada@example.com"));
+
+        String oversizedEmail = "a".repeat(309) + "@example.com";
+        assertThrows(
+                InvalidCustomerProfileException.class,
+                () -> new Customer(
+                        CustomerId.generate(),
+                        "Ada Lovelace",
+                        oversizedEmail));
+    }
+}
