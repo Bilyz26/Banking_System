@@ -20,6 +20,8 @@ The domain must not depend on Spring, HTTP, or persistence technologies.
 
 Detailed architectural decisions are recorded in
 [`docs/architecture/0001-modular-monolith.md`](docs/architecture/0001-modular-monolith.md).
+The authoritative delivery phases and their current status are recorded in
+[`docs/roadmap.md`](docs/roadmap.md).
 
 ## Requirements
 
