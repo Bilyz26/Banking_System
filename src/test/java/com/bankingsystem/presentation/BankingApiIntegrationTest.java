@@ -18,6 +18,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -48,6 +49,24 @@ class BankingApiIntegrationTest {
                 .andExpect(jsonPath("$.customerId").value(sourceCustomerId))
                 .andExpect(jsonPath("$.fullName").value("Grace Hopper"))
                 .andExpect(jsonPath("$.emailAddress").value("grace@example.com"));
+
+        mockMvc.perform(put("/api/v1/customers/{customerId}", sourceCustomerId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fullName": "Rear Admiral Grace Hopper",
+                                  "emailAddress": "grace.hopper@example.com"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.customerId").value(sourceCustomerId))
+                .andExpect(jsonPath("$.fullName").value("Rear Admiral Grace Hopper"))
+                .andExpect(jsonPath("$.emailAddress").value("grace.hopper@example.com"));
+
+        mockMvc.perform(get("/api/v1/customers/{customerId}", sourceCustomerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("Rear Admiral Grace Hopper"))
+                .andExpect(jsonPath("$.emailAddress").value("grace.hopper@example.com"));
 
         mockMvc.perform(post("/api/v1/accounts/{accountId}/deposits", sourceAccountId)
                         .header("Idempotency-Key", UUID.randomUUID())
@@ -138,6 +157,53 @@ class BankingApiIntegrationTest {
                         "4261d99d-9ba9-45e0-b55a-c7250f305e05"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("CUSTOMER_NOT_FOUND"));
+
+        mockMvc.perform(put("/api/v1/customers/{customerId}",
+                        "4261d99d-9ba9-45e0-b55a-c7250f305e05")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fullName": "Missing Customer",
+                                  "emailAddress": "missing@example.com"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CUSTOMER_NOT_FOUND"));
+    }
+
+    @Test
+    void validatesCustomerUpdatesAndRejectsDuplicateEmail() throws Exception {
+        String uniqueSuffix = UUID.randomUUID().toString();
+        String firstCustomerId = createCustomer(
+                "First Customer",
+                "first-%s@example.com".formatted(uniqueSuffix));
+        createCustomer(
+                "Second Customer",
+                "second-%s@example.com".formatted(uniqueSuffix));
+
+        mockMvc.perform(put("/api/v1/customers/{customerId}", firstCustomerId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fullName": " ",
+                                  "emailAddress": "not-an-email"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.fieldErrors.fullName").exists())
+                .andExpect(jsonPath("$.fieldErrors.emailAddress").exists());
+
+        mockMvc.perform(put("/api/v1/customers/{customerId}", firstCustomerId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fullName": "First Customer",
+                                  "emailAddress": "second-%s@example.com"
+                                }
+                                """.formatted(uniqueSuffix)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CUSTOMER_EMAIL_ALREADY_EXISTS"));
     }
 
     @Test

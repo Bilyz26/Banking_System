@@ -18,6 +18,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -132,6 +133,30 @@ class ApiSecurityIntegrationTest {
                         .content("{}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("INSUFFICIENT_SCOPE"));
+    }
+
+    @Test
+    void adminScopeReachesCustomerUpdateWhileWriteScopeIsRejected() throws Exception {
+        String request = """
+                {
+                  "fullName": "Updated Customer",
+                  "emailAddress": "updated@example.com"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/customers/{customerId}", UUID.randomUUID())
+                        .with(scope("banking.write"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("INSUFFICIENT_SCOPE"));
+
+        mockMvc.perform(put("/api/v1/customers/{customerId}", UUID.randomUUID())
+                        .with(scope("banking.admin"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CUSTOMER_NOT_FOUND"));
     }
 
     private static org.springframework.test.web.servlet.request.RequestPostProcessor scope(

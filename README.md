@@ -140,7 +140,7 @@ before they are merged.
 The current modular-monolith implementation includes:
 
 - immutable monetary values with currency-safe arithmetic
-- customer creation, retrieval, and in-memory customer storage
+- customer creation, retrieval, profile updates, and in-memory customer storage
 - account opening, retrieval, and lifecycle management
 - account ownership, balances, deposits, withdrawals, and lifecycle rules
 - overdraft prevention

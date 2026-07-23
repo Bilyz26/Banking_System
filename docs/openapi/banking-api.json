@@ -88,6 +88,36 @@
             "$ref": "#/components/responses/ApiError"
           }
         }
+      },
+      "put": {
+        "operationId": "updateCustomerProfile",
+        "summary": "Replace a customer's editable profile",
+        "x-required-scope": "banking.admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer profile updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
       }
     },
     "/accounts": {
@@ -422,6 +452,23 @@
     },
     "schemas": {
       "CreateCustomerRequest": {
+        "type": "object",
+        "required": ["fullName", "emailAddress"],
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "emailAddress": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1,
+            "maxLength": 320
+          }
+        }
+      },
+      "UpdateCustomerProfileRequest": {
         "type": "object",
         "required": ["fullName", "emailAddress"],
         "properties": {
