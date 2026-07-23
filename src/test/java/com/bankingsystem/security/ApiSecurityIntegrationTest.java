@@ -76,6 +76,14 @@ class ApiSecurityIntegrationTest {
     }
 
     @Test
+    void readScopeReachesCustomerQuery() throws Exception {
+        mockMvc.perform(get("/api/v1/customers/{customerId}", UUID.randomUUID())
+                        .with(scope("banking.read")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CUSTOMER_NOT_FOUND"));
+    }
+
+    @Test
     void readScopeReachesTransactionHistoryQuery() throws Exception {
         mockMvc.perform(get(
                         "/api/v1/accounts/{accountId}/transactions",

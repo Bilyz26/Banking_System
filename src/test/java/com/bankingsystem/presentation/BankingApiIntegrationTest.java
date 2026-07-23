@@ -43,6 +43,12 @@ class BankingApiIntegrationTest {
         String destinationAccountId = openAccount(destinationCustomerId);
         String lifecycleAccountId = openAccount(sourceCustomerId);
 
+        mockMvc.perform(get("/api/v1/customers/{customerId}", sourceCustomerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.customerId").value(sourceCustomerId))
+                .andExpect(jsonPath("$.fullName").value("Grace Hopper"))
+                .andExpect(jsonPath("$.emailAddress").value("grace@example.com"));
+
         mockMvc.perform(post("/api/v1/accounts/{accountId}/deposits", sourceAccountId)
                         .header("Idempotency-Key", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -127,6 +133,11 @@ class BankingApiIntegrationTest {
         mockMvc.perform(get("/api/v1/accounts/not-a-uuid"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
+
+        mockMvc.perform(get("/api/v1/customers/{customerId}",
+                        "4261d99d-9ba9-45e0-b55a-c7250f305e05"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CUSTOMER_NOT_FOUND"));
     }
 
     @Test
