@@ -76,6 +76,16 @@ class ApiSecurityIntegrationTest {
     }
 
     @Test
+    void readScopeReachesTransactionHistoryQuery() throws Exception {
+        mockMvc.perform(get(
+                        "/api/v1/accounts/{accountId}/transactions",
+                        UUID.randomUUID())
+                        .with(scope("banking.read")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ACCOUNT_NOT_FOUND"));
+    }
+
+    @Test
     void writeScopeReachesMoneyOperationWithoutCsrfToken() throws Exception {
         mockMvc.perform(post(
                         "/api/v1/accounts/{accountId}/deposits",

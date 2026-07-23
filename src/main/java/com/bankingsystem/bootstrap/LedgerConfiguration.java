@@ -1,5 +1,8 @@
 package com.bankingsystem.bootstrap;
 
+import com.bankingsystem.account.application.port.out.AccountRepository;
+import com.bankingsystem.ledger.application.GetAccountTransactionsService;
+import com.bankingsystem.ledger.application.port.in.GetAccountTransactionsUseCase;
 import com.bankingsystem.ledger.application.port.out.LedgerEntryIdGenerator;
 import com.bankingsystem.ledger.application.port.out.LedgerRepository;
 import com.bankingsystem.ledger.application.port.out.LedgerTransactionIdGenerator;
@@ -35,5 +38,12 @@ public class LedgerConfiguration {
     @Bean
     Clock applicationClock() {
         return Clock.systemUTC();
+    }
+
+    @Bean
+    GetAccountTransactionsUseCase getAccountTransactionsUseCase(
+            AccountRepository accountRepository,
+            LedgerRepository ledgerRepository) {
+        return new GetAccountTransactionsService(accountRepository, ledgerRepository);
     }
 }

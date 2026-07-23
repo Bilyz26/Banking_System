@@ -13,6 +13,7 @@ import com.bankingsystem.customer.domain.Customer;
 import com.bankingsystem.customer.domain.CustomerId;
 import com.bankingsystem.ledger.application.DuplicateLedgerEntryException;
 import com.bankingsystem.ledger.application.port.out.LedgerRepository;
+import com.bankingsystem.ledger.application.LedgerPagePosition;
 import com.bankingsystem.ledger.domain.LedgerEntry;
 import com.bankingsystem.ledger.domain.LedgerEntryId;
 import com.bankingsystem.ledger.domain.LedgerEntryType;
@@ -169,6 +170,36 @@ class PostgresqlPersistenceIntegrationTest {
     }
 
     @Test
+    void readsStableNewestFirstLedgerPages() {
+        accountRepository.save(account(SOURCE_ACCOUNT_ID, "30.00"));
+        LedgerEntry oldest = historyEntry(
+                "00000000-0000-0000-0000-000000000011",
+                "2026-07-23T10:00:00Z",
+                "10.00");
+        LedgerEntry second = historyEntry(
+                "00000000-0000-0000-0000-000000000012",
+                "2026-07-23T11:00:00Z",
+                "20.00");
+        LedgerEntry newest = historyEntry(
+                "00000000-0000-0000-0000-000000000013",
+                "2026-07-23T11:00:00Z",
+                "30.00");
+        ledgerRepository.appendAll(java.util.List.of(oldest, second, newest));
+
+        var firstPage = ledgerRepository.findPageByAccountId(
+                SOURCE_ACCOUNT_ID,
+                null,
+                2);
+        var secondPage = ledgerRepository.findPageByAccountId(
+                SOURCE_ACCOUNT_ID,
+                new LedgerPagePosition(second.occurredAt(), second.id()),
+                2);
+
+        assertEquals(java.util.List.of(newest, second), firstPage);
+        assertEquals(java.util.List.of(oldest), secondPage);
+    }
+
+    @Test
     void rollsBackBothAccountsWhenLedgerBatchFails() {
         accountRepository.save(account(SOURCE_ACCOUNT_ID, "100.00"));
         accountRepository.save(account(DESTINATION_ACCOUNT_ID, "0.00"));
@@ -236,5 +267,21 @@ class PostgresqlPersistenceIntegrationTest {
                 balanceAfter,
                 Instant.parse("2026-07-23T20:00:00Z"),
                 "Existing entry");
+    }
+
+    private static LedgerEntry historyEntry(
+            String id,
+            String occurredAt,
+            String balanceAfter) {
+        UUID entryId = UUID.fromString(id);
+        return new LedgerEntry(
+                new LedgerEntryId(entryId),
+                new LedgerTransactionId(entryId),
+                SOURCE_ACCOUNT_ID,
+                LedgerEntryType.DEPOSIT,
+                Money.of("10.00", "USD"),
+                Money.of(balanceAfter, "USD"),
+                Instant.parse(occurredAt),
+                "History deposit");
     }
 }

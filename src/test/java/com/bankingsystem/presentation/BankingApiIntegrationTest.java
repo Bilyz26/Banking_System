@@ -12,8 +12,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.Set;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -167,6 +169,47 @@ class BankingApiIntegrationTest {
                 .andExpect(jsonPath("$.code").value("IDEMPOTENCY_KEY_REUSED"));
     }
 
+    @Test
+    void pagesAccountTransactionsWithOpaqueCursor() throws Exception {
+        String customerId = createCustomer("Donald Knuth", "donald@example.com");
+        String accountId = openAccount(customerId);
+        String firstEntryId = deposit(accountId, "10.00", "First deposit");
+        String secondEntryId = deposit(accountId, "15.00", "Second deposit");
+
+        MvcResult firstPage = mockMvc.perform(get(
+                        "/api/v1/accounts/{accountId}/transactions",
+                        accountId)
+                        .param("limit", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nextCursor").isNotEmpty())
+                .andReturn();
+        String nextCursor =
+                JsonPath.read(firstPage.getResponse().getContentAsString(), "$.nextCursor");
+        String firstPageEntryId = JsonPath.read(
+                firstPage.getResponse().getContentAsString(),
+                "$.transactions[0].ledgerEntryId");
+
+        MvcResult secondPage = mockMvc.perform(
+                        get("/api/v1/accounts/{accountId}/transactions", accountId)
+                        .param("limit", "1")
+                        .param("cursor", nextCursor))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nextCursor").doesNotExist())
+                .andReturn();
+        String secondPageEntryId = JsonPath.read(
+                secondPage.getResponse().getContentAsString(),
+                "$.transactions[0].ledgerEntryId");
+
+        assertEquals(
+                Set.of(firstEntryId, secondEntryId),
+                Set.of(firstPageEntryId, secondPageEntryId));
+
+        mockMvc.perform(get("/api/v1/accounts/{accountId}/transactions", accountId)
+                        .param("cursor", "not-a-valid-cursor"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
     private String createCustomer(String fullName, String emailAddress) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -195,6 +238,26 @@ class BankingApiIntegrationTest {
                         "/api/v1/accounts/")))
                 .andReturn();
         return JsonPath.read(result.getResponse().getContentAsString(), "$.accountId");
+    }
+
+    private String deposit(
+            String accountId,
+            String amount,
+            String description) throws Exception {
+        MvcResult result = mockMvc.perform(
+                        post("/api/v1/accounts/{accountId}/deposits", accountId)
+                                .header("Idempotency-Key", UUID.randomUUID())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                          "amount": %s,
+                                          "currencyCode": "USD",
+                                          "description": "%s"
+                                        }
+                                        """.formatted(amount, description)))
+                .andExpect(status().isOk())
+                .andReturn();
+        return JsonPath.read(result.getResponse().getContentAsString(), "$.ledgerEntryId");
     }
 
     private void changeStatus(
