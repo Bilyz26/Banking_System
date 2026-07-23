@@ -13,6 +13,13 @@ import com.bankingsystem.ledger.presentation.AccountTransactionResponse;
 import com.bankingsystem.shared.presentation.ApiError;
 import com.bankingsystem.transfer.presentation.TransferMoneyRequest;
 import com.bankingsystem.transfer.presentation.TransferMoneyResponse;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -65,6 +72,11 @@ class OpenApiContractTest {
             Map.entry(AccountTransactionResponse.class, "Transaction"),
             Map.entry(AccountTransactionPageResponse.class, "TransactionPage"),
             Map.entry(ApiError.class, "ApiError"));
+    private static final Map<Class<?>, String> REQUEST_SCHEMAS = Map.of(
+            CreateCustomerRequest.class, "CreateCustomerRequest",
+            OpenAccountRequest.class, "OpenAccountRequest",
+            MoneyOperationRequest.class, "MoneyOperationRequest",
+            TransferMoneyRequest.class, "TransferRequest");
 
     @Autowired
     @Qualifier("requestMappingHandlerMapping")
@@ -108,6 +120,29 @@ class OpenApiContractTest {
                         component.getGenericType(),
                         schemaProperties.get(component.getName()),
                         dtoType.getSimpleName() + "." + component.getName());
+            }
+        });
+    }
+
+    @Test
+    void keepsDocumentedRequestConstraintsAlignedWithJakartaValidation()
+            throws IOException {
+        JsonNode contract = readContract();
+
+        REQUEST_SCHEMAS.forEach((requestType, schemaName) -> {
+            JsonNode schema = namedSchema(contract, schemaName);
+            assertEquals(
+                    requiredComponents(requestType),
+                    schemaRequiredFields(contract, schema),
+                    requestType.getSimpleName() + " required fields");
+
+            Map<String, JsonNode> properties = schemaProperties(contract, schema);
+            for (RecordComponent component : requestType.getRecordComponents()) {
+                assertDocumentedConstraints(
+                        contract,
+                        component,
+                        properties.get(component.getName()),
+                        requestType.getSimpleName() + "." + component.getName());
             }
         });
     }
@@ -175,6 +210,15 @@ class OpenApiContractTest {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    private static Set<String> requiredComponents(Class<?> requestType) {
+        return Arrays.stream(requestType.getRecordComponents())
+                .filter(component ->
+                        component.getAccessor().isAnnotationPresent(NotNull.class)
+                                || component.getAccessor().isAnnotationPresent(NotBlank.class))
+                .map(RecordComponent::getName)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
     private static Set<String> schemaPropertyNames(
             JsonNode contract,
             String schemaName) {
@@ -216,6 +260,98 @@ class OpenApiContractTest {
         String schemaName =
                 reference.textValue().substring(reference.textValue().lastIndexOf('/') + 1);
         return resolveSchema(contract, namedSchema(contract, schemaName));
+    }
+
+    private static Set<String> schemaRequiredFields(
+            JsonNode contract,
+            JsonNode schema) {
+        Set<String> required = new HashSet<>();
+        collectRequiredFields(contract, schema, required);
+        return Set.copyOf(required);
+    }
+
+    private static void collectRequiredFields(
+            JsonNode contract,
+            JsonNode schema,
+            Set<String> required) {
+        schema.path("required").forEach(field -> required.add(field.textValue()));
+        schema.path("allOf").forEach(component ->
+                collectRequiredFields(contract, resolveSchema(contract, component), required));
+    }
+
+    private static void assertDocumentedConstraints(
+            JsonNode contract,
+            RecordComponent component,
+            JsonNode documentedSchema,
+            String fieldName) {
+        JsonNode schema = resolveSchema(contract, documentedSchema);
+
+        if (component.getAccessor().isAnnotationPresent(NotBlank.class)) {
+            assertEquals(1, schema.path("minLength").intValue(), fieldName + " minLength");
+        }
+
+        Size size = component.getAccessor().getAnnotation(Size.class);
+        if (size != null) {
+            if (size.min() > 0) {
+                assertEquals(size.min(), schema.path("minLength").intValue(), fieldName);
+            }
+            if (size.max() < Integer.MAX_VALUE) {
+                assertEquals(size.max(), schema.path("maxLength").intValue(), fieldName);
+            }
+        }
+
+        Pattern pattern = component.getAccessor().getAnnotation(Pattern.class);
+        if (pattern != null) {
+            assertEquals(
+                    pattern.regexp(),
+                    withoutAnchors(schema.path("pattern").textValue()),
+                    fieldName + " pattern");
+        }
+
+        if (component.getAccessor().isAnnotationPresent(Email.class)) {
+            assertEquals("email", schema.path("format").textValue(), fieldName);
+        }
+
+        DecimalMin decimalMin = component.getAccessor().getAnnotation(DecimalMin.class);
+        if (decimalMin != null) {
+            String keyword = decimalMin.inclusive() ? "minimum" : "exclusiveMinimum";
+            assertDecimalEquals(
+                    new BigDecimal(decimalMin.value()),
+                    schema.path(keyword).decimalValue(),
+                    fieldName + " " + keyword);
+        }
+
+        Digits digits = component.getAccessor().getAnnotation(Digits.class);
+        if (digits != null) {
+            assertDecimalEquals(
+                    BigDecimal.ONE.movePointLeft(digits.fraction()),
+                    schema.path("multipleOf").decimalValue(),
+                    fieldName + " multipleOf");
+            assertDecimalEquals(
+                    BigDecimal.TEN.pow(digits.integer()),
+                    schema.path("exclusiveMaximum").decimalValue(),
+                    fieldName + " exclusiveMaximum");
+        }
+    }
+
+    private static void assertDecimalEquals(
+            BigDecimal expected,
+            BigDecimal actual,
+            String message) {
+        assertTrue(
+                expected.compareTo(actual) == 0,
+                () -> message + " expected " + expected + " but was " + actual);
+    }
+
+    private static String withoutAnchors(String pattern) {
+        String normalized = pattern;
+        if (normalized.startsWith("^")) {
+            normalized = normalized.substring(1);
+        }
+        if (normalized.endsWith("$")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized;
     }
 
     private static void assertCompatibleType(

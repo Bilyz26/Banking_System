@@ -9,7 +9,8 @@ during every build. REST record fields are also compared with their mapped
 OpenAPI schemas. CI publishes the verified contract as a seven-day build
 artifact named `banking-system-openapi-<commit-sha>`. Java field types, UUID
 and timestamp formats, collection items, and enum values are checked against
-the same schemas.
+the same schemas. Required fields, string limits, patterns, decimal bounds, and
+precision are checked against Jakarta validation annotations.
 
 ## Authentication and authorization
 

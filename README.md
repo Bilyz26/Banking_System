@@ -145,7 +145,7 @@ The current modular-monolith implementation includes:
 - atomic transfer application boundaries with paired ledger records
 - retry-safe deposits, withdrawals, and transfers using idempotency keys
 - cursor-paginated, newest-first account transaction history
-- a version-controlled OpenAPI 3.1 contract with route, field, type, format, and enum drift verification
+- a version-controlled OpenAPI 3.1 contract with route, DTO, type, enum, and validation-constraint drift verification
 - optional OAuth 2.0 JWT authentication with scope-based authorization
 - health probes, Prometheus metrics, and request correlation IDs
 - reproducible CI verification and non-root container packaging
