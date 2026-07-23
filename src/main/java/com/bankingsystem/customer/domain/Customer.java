@@ -27,6 +27,10 @@ public record Customer(CustomerId id, String fullName, String emailAddress) {
         }
     }
 
+    public Customer updateProfile(String fullName, String emailAddress) {
+        return new Customer(id, fullName, emailAddress);
+    }
+
     private static String requireText(String value, String fieldName) {
         if (value == null || value.isBlank()) {
             throw new InvalidCustomerProfileException(fieldName + " must not be blank");
