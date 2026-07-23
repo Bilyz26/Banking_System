@@ -39,6 +39,7 @@ public class TransferConfiguration {
             TransferCommitter transferCommitter,
             LedgerEntryIdGenerator ledgerEntryIdGenerator,
             LedgerTransactionIdGenerator transactionIdGenerator,
+            LedgerRepository ledgerRepository,
             Clock applicationClock) {
         return new TransferMoneyService(
                 accountRepository,
@@ -46,6 +47,7 @@ public class TransferConfiguration {
                 transferCommitter,
                 ledgerEntryIdGenerator,
                 transactionIdGenerator,
+                ledgerRepository,
                 applicationClock);
     }
 }

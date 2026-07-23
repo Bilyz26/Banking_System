@@ -12,6 +12,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.UUID;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -40,6 +42,7 @@ class BankingApiIntegrationTest {
         String lifecycleAccountId = openAccount(sourceCustomerId);
 
         mockMvc.perform(post("/api/v1/accounts/{accountId}/deposits", sourceAccountId)
+                        .header("Idempotency-Key", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -54,6 +57,7 @@ class BankingApiIntegrationTest {
                 .andExpect(jsonPath("$.ledgerEntryId").isNotEmpty());
 
         mockMvc.perform(post("/api/v1/transfers")
+                        .header("Idempotency-Key", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -71,6 +75,7 @@ class BankingApiIntegrationTest {
                 .andExpect(jsonPath("$.creditEntryId").isNotEmpty());
 
         mockMvc.perform(post("/api/v1/accounts/{accountId}/withdrawals", destinationAccountId)
+                        .header("Idempotency-Key", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -99,6 +104,7 @@ class BankingApiIntegrationTest {
     void returnsStableErrorsForInvalidInputAndMissingAccount() throws Exception {
         mockMvc.perform(post("/api/v1/accounts/{accountId}/deposits",
                         "4261d99d-9ba9-45e0-b55a-c7250f305e05")
+                        .header("Idempotency-Key", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -119,6 +125,46 @@ class BankingApiIntegrationTest {
         mockMvc.perform(get("/api/v1/accounts/not-a-uuid"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
+    }
+
+    @Test
+    void replaysAnIdenticalDepositAndRejectsKeyReuse() throws Exception {
+        String customerId = createCustomer("Barbara Liskov", "barbara@example.com");
+        String accountId = openAccount(customerId);
+        UUID idempotencyKey = UUID.randomUUID();
+        String deposit = """
+                {
+                  "amount": 25.00,
+                  "currencyCode": "USD",
+                  "description": "Retry-safe deposit"
+                }
+                """;
+
+        MvcResult firstResponse = mockMvc.perform(
+                        post("/api/v1/accounts/{accountId}/deposits", accountId)
+                                .header("Idempotency-Key", idempotencyKey)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(deposit))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        mockMvc.perform(post("/api/v1/accounts/{accountId}/deposits", accountId)
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(deposit))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ledgerEntryId").value(
+                        JsonPath.read(
+                                firstResponse.getResponse().getContentAsString(),
+                                "$.ledgerEntryId").toString()))
+                .andExpect(jsonPath("$.balance").value(25.00));
+
+        mockMvc.perform(post("/api/v1/accounts/{accountId}/deposits", accountId)
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(deposit.replace("25.00", "30.00")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("IDEMPOTENCY_KEY_REUSED"));
     }
 
     private String createCustomer(String fullName, String emailAddress) throws Exception {

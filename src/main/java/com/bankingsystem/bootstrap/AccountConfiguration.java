@@ -79,12 +79,14 @@ public class AccountConfiguration {
             AccountOperationCommitter accountOperationCommitter,
             LedgerEntryIdGenerator ledgerEntryIdGenerator,
             LedgerTransactionIdGenerator ledgerTransactionIdGenerator,
+            LedgerRepository ledgerRepository,
             Clock applicationClock) {
         return new AccountMoneyOperationService(
                 accountRepository,
                 accountOperationCommitter,
                 ledgerEntryIdGenerator,
                 ledgerTransactionIdGenerator,
+                ledgerRepository,
                 applicationClock);
     }
 }

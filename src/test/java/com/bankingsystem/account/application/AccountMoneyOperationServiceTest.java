@@ -13,6 +13,8 @@ import com.bankingsystem.ledger.domain.LedgerEntry;
 import com.bankingsystem.ledger.domain.LedgerEntryId;
 import com.bankingsystem.ledger.domain.LedgerEntryType;
 import com.bankingsystem.ledger.domain.LedgerTransactionId;
+import com.bankingsystem.ledger.infrastructure.InMemoryLedgerRepository;
+import com.bankingsystem.shared.application.IdempotencyConflictException;
 import com.bankingsystem.shared.domain.Money;
 import org.junit.jupiter.api.Test;
 
@@ -40,12 +42,15 @@ class AccountMoneyOperationServiceTest {
     private static final Instant NOW = Instant.parse("2026-07-23T12:00:00Z");
 
     private final TestAccountRepository repository = new TestAccountRepository();
-    private final CapturingCommitter committer = new CapturingCommitter(repository);
+    private final InMemoryLedgerRepository ledgerRepository = new InMemoryLedgerRepository();
+    private final CapturingCommitter committer =
+            new CapturingCommitter(repository, ledgerRepository);
     private final AccountMoneyOperationService service = new AccountMoneyOperationService(
             repository,
             committer,
             () -> ENTRY_ID,
             () -> TRANSACTION_ID,
+            ledgerRepository,
             Clock.fixed(NOW, ZoneOffset.UTC));
 
     @Test
@@ -111,6 +116,43 @@ class AccountMoneyOperationServiceTest {
         assertNull(committer.ledgerEntry);
     }
 
+    @Test
+    void returnsOriginalDepositWhenIdempotencyKeyIsRetried() {
+        repository.save(openAccount(Money.of("10.00", "USD")));
+        DepositMoneyCommand command = new DepositMoneyCommand(
+                ACCOUNT_ID,
+                Money.of("25.00", "USD"),
+                "Cash deposit",
+                TRANSACTION_ID);
+
+        MoneyOperationResult firstResult = service.deposit(command);
+        MoneyOperationResult retriedResult = service.deposit(command);
+
+        assertEquals(firstResult, retriedResult);
+        assertEquals(
+                Money.of("35.00", "USD"),
+                repository.findById(ACCOUNT_ID).orElseThrow().balance());
+        assertEquals(1, ledgerRepository.findByTransactionId(TRANSACTION_ID).size());
+    }
+
+    @Test
+    void rejectsIdempotencyKeyReusedForDifferentAmount() {
+        repository.save(openAccount(Money.of("10.00", "USD")));
+        service.deposit(new DepositMoneyCommand(
+                ACCOUNT_ID,
+                Money.of("25.00", "USD"),
+                "Cash deposit",
+                TRANSACTION_ID));
+
+        assertThrows(
+                IdempotencyConflictException.class,
+                () -> service.deposit(new DepositMoneyCommand(
+                        ACCOUNT_ID,
+                        Money.of("30.00", "USD"),
+                        "Cash deposit",
+                        TRANSACTION_ID)));
+    }
+
     private static BankAccount openAccount(Money balance) {
         return BankAccount.restore(
                 ACCOUNT_ID,
@@ -137,15 +179,20 @@ class AccountMoneyOperationServiceTest {
     private static final class CapturingCommitter implements AccountOperationCommitter {
 
         private final AccountRepository repository;
+        private final InMemoryLedgerRepository ledgerRepository;
         private LedgerEntry ledgerEntry;
 
-        private CapturingCommitter(AccountRepository repository) {
+        private CapturingCommitter(
+                AccountRepository repository,
+                InMemoryLedgerRepository ledgerRepository) {
             this.repository = repository;
+            this.ledgerRepository = ledgerRepository;
         }
 
         @Override
         public void commit(BankAccount account, LedgerEntry ledgerEntry) {
             this.ledgerEntry = ledgerEntry;
+            ledgerRepository.append(ledgerEntry);
             repository.save(account);
         }
     }

@@ -5,11 +5,13 @@ import com.bankingsystem.account.application.ConcurrentAccountModificationExcept
 import com.bankingsystem.customer.application.CustomerNotFoundException;
 import com.bankingsystem.customer.application.DuplicateCustomerEmailException;
 import com.bankingsystem.shared.application.ApplicationException;
+import com.bankingsystem.shared.application.IdempotencyConflictException;
 import com.bankingsystem.shared.domain.DomainException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -34,6 +36,21 @@ public final class GlobalExceptionHandler {
                 HttpStatus.CONFLICT,
                 "CONCURRENT_ACCOUNT_MODIFICATION",
                 exception.getMessage());
+    }
+
+    @ExceptionHandler(IdempotencyConflictException.class)
+    public ResponseEntity<ApiError> handleIdempotencyConflict(
+            IdempotencyConflictException exception) {
+        return error(HttpStatus.CONFLICT, "IDEMPOTENCY_KEY_REUSED", exception.getMessage());
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ApiError> handleMissingHeader(
+            MissingRequestHeaderException exception) {
+        return error(
+                HttpStatus.BAD_REQUEST,
+                "MISSING_REQUIRED_HEADER",
+                "Required header '%s' is missing".formatted(exception.getHeaderName()));
     }
 
     @ExceptionHandler({AccountNotFoundException.class, CustomerNotFoundException.class})

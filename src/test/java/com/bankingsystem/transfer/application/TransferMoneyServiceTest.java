@@ -14,6 +14,7 @@ import com.bankingsystem.ledger.domain.LedgerEntryType;
 import com.bankingsystem.ledger.domain.LedgerTransactionId;
 import com.bankingsystem.ledger.infrastructure.InMemoryLedgerRepository;
 import com.bankingsystem.shared.domain.Money;
+import com.bankingsystem.shared.application.IdempotencyConflictException;
 import com.bankingsystem.transfer.application.port.in.TransferMoneyCommand;
 import com.bankingsystem.transfer.application.port.in.TransferMoneyResult;
 import com.bankingsystem.transfer.domain.TransferService;
@@ -129,6 +130,44 @@ class TransferMoneyServiceTest {
         assertUnchangedBalancesAndEmptyLedger();
     }
 
+    @Test
+    void returnsOriginalTransferWhenIdempotencyKeyIsRetried() {
+        TransferMoneyService service = transferService(DEBIT_ENTRY_ID, CREDIT_ENTRY_ID);
+        TransferMoneyCommand command = new TransferMoneyCommand(
+                SOURCE_ACCOUNT_ID,
+                DESTINATION_ACCOUNT_ID,
+                Money.of("35.00", "USD"),
+                "Invoice 1042",
+                TRANSACTION_ID);
+
+        TransferMoneyResult firstResult = service.transfer(command);
+        TransferMoneyResult retriedResult = service.transfer(command);
+
+        assertEquals(firstResult, retriedResult);
+        assertEquals(Money.of("65.00", "USD"), retriedResult.sourceBalance());
+        assertEquals(Money.of("55.00", "USD"), retriedResult.destinationBalance());
+    }
+
+    @Test
+    void rejectsIdempotencyKeyReusedForDifferentTransfer() {
+        TransferMoneyService service = transferService(DEBIT_ENTRY_ID, CREDIT_ENTRY_ID);
+        service.transfer(new TransferMoneyCommand(
+                SOURCE_ACCOUNT_ID,
+                DESTINATION_ACCOUNT_ID,
+                Money.of("35.00", "USD"),
+                "Invoice 1042",
+                TRANSACTION_ID));
+
+        assertThrows(
+                IdempotencyConflictException.class,
+                () -> service.transfer(new TransferMoneyCommand(
+                        SOURCE_ACCOUNT_ID,
+                        DESTINATION_ACCOUNT_ID,
+                        Money.of("36.00", "USD"),
+                        "Invoice 1042",
+                        TRANSACTION_ID)));
+    }
+
     private TransferMoneyService transferService(LedgerEntryId... generatedEntryIds) {
         Iterator<LedgerEntryId> entryIds = List.of(generatedEntryIds).iterator();
         return new TransferMoneyService(
@@ -137,6 +176,7 @@ class TransferMoneyServiceTest {
                 new InMemoryTransferCommitter(accountRepository, ledgerRepository),
                 entryIds::next,
                 () -> TRANSACTION_ID,
+                ledgerRepository,
                 Clock.fixed(OCCURRED_AT, ZoneOffset.UTC));
     }
 
