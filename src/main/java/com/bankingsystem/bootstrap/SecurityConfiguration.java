@@ -29,6 +29,16 @@ public class SecurityConfiguration {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/health/**")
+                        .permitAll()
+                        .requestMatchers(
+                                "/actuator/info",
+                                "/actuator/metrics",
+                                "/actuator/metrics/**",
+                                "/actuator/prometheus")
+                        .hasAuthority("SCOPE_banking.monitor")
                         .requestMatchers(HttpMethod.GET, "/api/v1/accounts/*")
                         .hasAuthority("SCOPE_banking.read")
                         .requestMatchers(

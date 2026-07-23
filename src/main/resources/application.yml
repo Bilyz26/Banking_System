@@ -5,3 +5,27 @@ spring:
     exclude:
       - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
       - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  info:
+    env:
+      enabled: true
+
+info:
+  application:
+    name: ${spring.application.name}
+    description: Production-oriented banking REST API
+    version: "@project.version@"
+
+logging:
+  pattern:
+    level: "%5p [correlationId:%X{correlationId:-none}]"
