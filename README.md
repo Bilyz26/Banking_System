@@ -63,6 +63,26 @@ The profile reads `BANKING_DB_URL`, `BANKING_DB_USERNAME`,
 `BANKING_DB_PASSWORD`, and `BANKING_DB_POOL_SIZE`. The defaults match
 [`compose.yml`](compose.yml). Flyway applies pending migrations at startup.
 
+## Running with API security
+
+Set `BANKING_JWT_ISSUER_URI` to the issuer identifier of your OAuth 2.0
+authorization server, then activate the `secure` profile:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=secure"
+```
+
+For durable production-style operation, activate both profiles:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=postgresql,secure"
+```
+
+The default profile intentionally permits unauthenticated requests for local
+development. Do not expose it to an untrusted network. The `secure` profile
+validates bearer JWTs and enforces the scopes documented in
+[`docs/api.md`](docs/api.md).
+
 ## Verifying the project
 
 On Windows:
@@ -91,6 +111,7 @@ The current modular-monolith implementation includes:
 - overdraft prevention
 - atomic transfer application boundaries with paired ledger records
 - retry-safe deposits, withdrawals, and transfers using idempotency keys
+- optional OAuth 2.0 JWT authentication with scope-based authorization
 - REST endpoints with request validation and stable error responses
 - unit and end-to-end MockMvc tests
 
