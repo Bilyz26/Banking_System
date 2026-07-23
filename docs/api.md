@@ -2,6 +2,24 @@
 
 All endpoints use the `/api/v1` prefix and exchange JSON.
 
+## Authentication and authorization
+
+When the `secure` profile is active, every endpoint requires an
+`Authorization: Bearer <token>` header. The JWT is validated against the issuer
+configured by `BANKING_JWT_ISSUER_URI`.
+
+Required OAuth 2.0 scopes:
+
+| Scope | Operations |
+| --- | --- |
+| `banking.read` | Retrieve an account |
+| `banking.write` | Deposit, withdraw, and transfer money |
+| `banking.admin` | Create customers and accounts; freeze, unfreeze, and close accounts |
+
+Missing or invalid authentication returns `401` with
+`AUTHENTICATION_REQUIRED`. A valid token without the required scope returns
+`403` with `INSUFFICIENT_SCOPE`.
+
 ## Customers
 
 - `POST /customers` creates a customer.
