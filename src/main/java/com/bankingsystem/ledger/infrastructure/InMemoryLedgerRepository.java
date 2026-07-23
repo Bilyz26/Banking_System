@@ -8,9 +8,11 @@ import com.bankingsystem.ledger.domain.LedgerEntryId;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Temporary append-only adapter used until PostgreSQL is introduced.
@@ -22,15 +24,27 @@ public final class InMemoryLedgerRepository implements LedgerRepository {
 
     @Override
     public synchronized void append(LedgerEntry ledgerEntry) {
-        Objects.requireNonNull(ledgerEntry, "ledger entry must not be null");
-        if (entriesById.containsKey(ledgerEntry.id())) {
-            throw new DuplicateLedgerEntryException(ledgerEntry.id());
+        appendAll(List.of(ledgerEntry));
+    }
+
+    @Override
+    public synchronized void appendAll(List<LedgerEntry> ledgerEntries) {
+        Objects.requireNonNull(ledgerEntries, "ledger entries must not be null");
+        List<LedgerEntry> entries = List.copyOf(ledgerEntries);
+        Set<LedgerEntryId> batchEntryIds = new HashSet<>();
+
+        for (LedgerEntry entry : entries) {
+            if (entriesById.containsKey(entry.id()) || !batchEntryIds.add(entry.id())) {
+                throw new DuplicateLedgerEntryException(entry.id());
+            }
         }
 
-        entriesById.put(ledgerEntry.id(), ledgerEntry);
-        entriesByAccountId
-                .computeIfAbsent(ledgerEntry.accountId(), ignored -> new ArrayList<>())
-                .add(ledgerEntry);
+        for (LedgerEntry entry : entries) {
+            entriesById.put(entry.id(), entry);
+            entriesByAccountId
+                    .computeIfAbsent(entry.accountId(), ignored -> new ArrayList<>())
+                    .add(entry);
+        }
     }
 
     @Override

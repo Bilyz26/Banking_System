@@ -9,5 +9,10 @@ public interface LedgerRepository {
 
     void append(LedgerEntry ledgerEntry);
 
+    /**
+     * Appends every entry or none of them.
+     */
+    void appendAll(List<LedgerEntry> ledgerEntries);
+
     List<LedgerEntry> findByAccountId(AccountId accountId);
 }

@@ -5,6 +5,7 @@ import com.bankingsystem.account.domain.AccountId;
 import com.bankingsystem.account.domain.BankAccount;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,6 +29,16 @@ public final class InMemoryAccountRepository implements AccountRepository {
         accounts.put(account.id(), copy(account));
     }
 
+    public synchronized void saveAll(BankAccount... accountsToSave) {
+        Objects.requireNonNull(accountsToSave, "accounts to save must not be null");
+        List<BankAccount> snapshots = java.util.Arrays.stream(accountsToSave)
+                .map(account -> copy(Objects.requireNonNull(
+                        account,
+                        "account to save must not be null")))
+                .toList();
+        snapshots.forEach(account -> accounts.put(account.id(), account));
+    }
+
     private BankAccount copy(BankAccount account) {
         return BankAccount.restore(
                 account.id(),
@@ -36,4 +47,3 @@ public final class InMemoryAccountRepository implements AccountRepository {
                 account.status());
     }
 }
-
