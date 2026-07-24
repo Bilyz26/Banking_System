@@ -8,4 +8,7 @@ target
 *.iml
 *.log
 README.md
-docs
+docs/*
+!docs/openapi/
+docs/openapi/*
+!docs/openapi/banking-api.json
