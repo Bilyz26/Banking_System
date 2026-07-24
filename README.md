@@ -130,6 +130,10 @@ The complete endpoint reference is available in
 With the application running, interactive API documentation is available at
 `http://localhost:8080/swagger-ui.html`.
 
+The `verify` lifecycle also enforces Clean Architecture boundaries, the Java and
+Maven toolchain, source-quality checks, bytecode defect analysis, and a minimum
+line-coverage baseline. Reports are generated under `target/site`.
+
 ## Continuous integration
 
 The GitHub Actions workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)

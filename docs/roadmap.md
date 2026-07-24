@@ -36,7 +36,7 @@ its tests and documentation are updated.
 | 15 | Add Authentication and Authorization | Complete | OAuth2 resource-server security and scope authorization are implemented. |
 | 16 | Add Audit Logging, Monitoring, and Health Checks | Complete | Ledger auditing, correlation IDs, health probes, and Prometheus metrics exist. |
 | 17 | Add Integration and End-to-End Testing | In progress | Integration coverage exists; production-like PostgreSQL and secured E2E coverage remains. |
-| 18 | Add Architecture Tests and Static Analysis | Planned | ArchUnit rules and automated static-analysis quality gates remain. |
+| 18 | Add Architecture Tests and Static Analysis | Complete | ArchUnit, Enforcer, Checkstyle, SpotBugs, and JaCoCo gates run during verification. |
 | 19 | Add Docker and Local Deployment Configuration | In progress | Docker and Compose exist; complete secured local deployment and developer configuration remain. |
 | 20 | Add GitHub Actions Continuous Integration | Complete | Java 21 verification and container-image build jobs are active ahead of sequence. |
 | 21 | Complete Security and Production-Readiness Review | Planned | Scheduled after local deployment is complete. |
@@ -47,9 +47,8 @@ its tests and documentation are updated.
 
 The remaining work through Phase 19 will be completed in this order:
 
-1. Add architecture rules and static-analysis gates for Phase 18.
-2. Add production-like PostgreSQL and secured E2E testing for Phase 17.
-3. Finish secured Docker-based local deployment for Phase 19.
+1. Add production-like PostgreSQL and secured E2E testing for Phase 17.
+2. Finish secured Docker-based local deployment for Phase 19.
 
 Each recovery item receives focused tests, documentation, a dedicated branch,
 and a passing continuous-integration run.
