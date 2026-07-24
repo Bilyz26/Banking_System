@@ -8,6 +8,8 @@ RUN chmod +x mvnw \
     && ./mvnw --batch-mode --no-transfer-progress dependency:go-offline
 
 COPY src/ src/
+COPY config/ config/
+COPY docs/openapi/ docs/openapi/
 RUN ./mvnw --batch-mode --no-transfer-progress -DskipTests package \
     && cp target/banking-system-*.jar /workspace/application.jar
 
