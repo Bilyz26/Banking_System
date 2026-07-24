@@ -1,0 +1,77 @@
+{
+  "realm": "banking",
+  "enabled": true,
+  "displayName": "Banking System Local Development",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "sslRequired": "external",
+  "clientScopes": [
+    {
+      "name": "banking.read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "banking.write",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "banking.admin",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "banking.monitor",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "banking-cli",
+      "name": "Banking System Local CLI",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "defaultClientScopes": [
+        "banking.read",
+        "banking.write",
+        "banking.admin",
+        "banking.monitor"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "banking-developer",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Banking",
+      "lastName": "Developer",
+      "email": "developer@banking.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "banking-local-change-me",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

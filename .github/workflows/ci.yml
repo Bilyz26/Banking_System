@@ -59,5 +59,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v6
 
+      - name: Validate local deployment configuration
+        run: |
+          docker compose config --quiet
+          python -m json.tool deployment/keycloak/banking-realm.json > /dev/null
+
       - name: Build image
         run: docker build --tag banking-system:${{ github.sha }} .
