@@ -16,6 +16,27 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>Banking System</name>
     <description>A clean-architecture banking system REST API</description>
+    <url>https://github.com/Bilyz26/Banking_System</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:https://github.com/Bilyz26/Banking_System.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/Bilyz26/Banking_System.git</developerConnection>
+        <url>https://github.com/Bilyz26/Banking_System</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/Bilyz26/Banking_System/issues</url>
+    </issueManagement>
 
     <properties>
         <java.version>21</java.version>
