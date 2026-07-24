@@ -30,6 +30,12 @@ public class SecurityConfiguration {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/webjars/swagger-ui/**",
+                                "/openapi/banking-api.json")
+                        .permitAll()
+                        .requestMatchers(
                                 "/actuator/health",
                                 "/actuator/health/**")
                         .permitAll()

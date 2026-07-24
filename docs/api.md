@@ -2,7 +2,7 @@
 
 All endpoints use the `/api/v1` prefix and exchange JSON.
 
-The machine-readable OpenAPI 3.1 contract is available at
+The machine-readable OpenAPI 3.1 contract is available in the repository at
 [`docs/openapi/banking-api.json`](openapi/banking-api.json). It is maintained
 as a reviewed source artifact and verified against the registered Spring routes
 during every build. REST record fields are also compared with their mapped
@@ -11,6 +11,12 @@ artifact named `banking-system-openapi-<commit-sha>`. Java field types, UUID
 and timestamp formats, collection items, and enum values are checked against
 the same schemas. Required fields, string limits, patterns, decimal bounds, and
 precision are checked against Jakarta validation annotations.
+
+When the application is running, the same reviewed contract is served at
+`/openapi/banking-api.json` and its interactive Swagger UI is available at
+`/swagger-ui.html`. Both documentation endpoints remain public when the
+`secure` profile is active; API operations still require their documented
+bearer-token scopes.
 
 ## Authentication and authorization
 
