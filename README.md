@@ -1,7 +1,15 @@
 # Banking System
 
+[![Continuous Integration](https://github.com/Bilyz26/Banking_System/actions/workflows/ci.yml/badge.svg)](https://github.com/Bilyz26/Banking_System/actions/workflows/ci.yml)
+[![Security](https://github.com/Bilyz26/Banking_System/actions/workflows/security.yml/badge.svg)](https://github.com/Bilyz26/Banking_System/actions/workflows/security.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 A production-oriented banking REST API built incrementally with Java, Spring Boot,
 Clean Architecture, and package-by-feature organization.
+
+> This project is an engineering reference implementation. It is not certified
+> to hold real funds or satisfy financial regulation without an independent
+> security, compliance, and operational program.
 
 ## Architecture
 
@@ -20,6 +28,9 @@ The domain must not depend on Spring, HTTP, or persistence technologies.
 
 Detailed architectural decisions are recorded in
 [`docs/architecture/0001-modular-monolith.md`](docs/architecture/0001-modular-monolith.md).
+Start with the
+[architecture overview](docs/architecture-overview.md) and
+[deployment guide](docs/deployment.md).
 The authoritative delivery phases and their current status are recorded in
 [`docs/roadmap.md`](docs/roadmap.md).
 
@@ -193,3 +204,10 @@ The current modular-monolith implementation includes:
 The default profile uses in-memory adapters for quick local work. The
 `postgresql` profile provides durable JDBC repositories, Flyway migrations,
 optimistic account locking, and database transaction boundaries.
+
+## Contributing and support
+
+Contributions are welcome under the [Apache License 2.0](LICENSE). Read the
+[contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md),
+[security policy](SECURITY.md), and [support policy](SUPPORT.md) before
+participating. Release history is maintained in [CHANGELOG.md](CHANGELOG.md).
