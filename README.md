@@ -26,6 +26,7 @@ The authoritative delivery phases and their current status are recorded in
 ## Requirements
 
 - Java 21
+- Docker Desktop or Docker Engine with Compose
 
 `JAVA_HOME` must point to the Java 21 installation, or Java must be available on
 the system `PATH`.
@@ -49,22 +50,51 @@ global Maven installation is not required.
 
 ## Running with PostgreSQL
 
-Start PostgreSQL:
+Copy the local environment template:
 
-```shell
-docker compose up -d postgres
+```powershell
+Copy-Item .env.example .env
 ```
 
-Start the complete containerized application:
+Start the secured local environment:
 
 ```shell
-docker compose up --build
+docker compose up --build --detach
 ```
 
-The application is available on port `8080` and PostgreSQL on port `5432`.
-Set `BANKING_PROFILES=postgresql,secure` and `BANKING_JWT_ISSUER_URI` to enable
-JWT security in the container. The default Compose credentials are for local
-development only and must be replaced by secret-managed values in production.
+Compose starts:
+
+- the banking API at `http://localhost:8080`;
+- PostgreSQL at `localhost:5432`;
+- Keycloak at `http://localhost:9000`.
+
+The application starts with PostgreSQL persistence and JWT security enabled.
+Compose waits for the database and identity provider to become healthy before
+starting it. All published ports bind only to `127.0.0.1`.
+
+Verify readiness, token issuance, authorization, persistence, and a deposit:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File .\scripts\verify-local-deployment.ps1
+```
+
+The expected result contains `Result: PASS`. The script creates a disposable
+customer and account in the local database. The imported Keycloak development
+user is `banking-developer` with password `banking-local-change-me`.
+
+Inspect or stop the environment:
+
+```shell
+docker compose ps
+docker compose logs --follow application
+docker compose down
+```
+
+Use `docker compose down --volumes` only when you intentionally want to delete
+all local banking data and recreate the environment. The values in
+`.env.example` and the imported Keycloak user are public development fixtures,
+not production secrets.
 
 Run the application with durable persistence:
 
