@@ -32,7 +32,7 @@ its tests and documentation are updated.
 | 11 | Complete Account REST Endpoints | Complete | Open, retrieve, freeze, unfreeze, and close endpoints exist. |
 | 12 | Complete Deposit, Withdrawal, and Transfer Endpoints | Complete | All three money-operation endpoints are implemented. |
 | 13 | Standardize Validation and API Error Handling | Complete | Request validation and stable structured errors are implemented. |
-| 14 | Add OpenAPI and Swagger Documentation | In progress | A verified OpenAPI contract exists; runtime Swagger UI remains. |
+| 14 | Add OpenAPI and Swagger Documentation | Complete | The verified contract is served unchanged through runtime Swagger UI. |
 | 15 | Add Authentication and Authorization | Complete | OAuth2 resource-server security and scope authorization are implemented. |
 | 16 | Add Audit Logging, Monitoring, and Health Checks | Complete | Ledger auditing, correlation IDs, health probes, and Prometheus metrics exist. |
 | 17 | Add Integration and End-to-End Testing | In progress | Integration coverage exists; production-like PostgreSQL and secured E2E coverage remains. |
@@ -49,8 +49,7 @@ The remaining work through Phase 19 will be completed in this order:
 
 1. Add architecture rules and static-analysis gates for Phase 18.
 2. Add production-like PostgreSQL and secured E2E testing for Phase 17.
-3. Add runtime Swagger UI for Phase 14.
-4. Finish secured Docker-based local deployment for Phase 19.
+3. Finish secured Docker-based local deployment for Phase 19.
 
 Each recovery item receives focused tests, documentation, a dedicated branch,
 and a passing continuous-integration run.

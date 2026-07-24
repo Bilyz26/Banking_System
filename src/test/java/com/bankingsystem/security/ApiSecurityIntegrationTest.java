@@ -61,6 +61,16 @@ class ApiSecurityIntegrationTest {
     }
 
     @Test
+    void allowsAnonymousAccessToReviewedApiDocumentation() throws Exception {
+        mockMvc.perform(get("/openapi/banking-api.json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openapi").value("3.1.0"));
+
+        mockMvc.perform(get("/swagger-ui.html"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void rejectsTokenWithoutRequiredScope() throws Exception {
         mockMvc.perform(get("/api/v1/accounts/{accountId}", UUID.randomUUID())
                         .with(scope("banking.write")))

@@ -24,15 +24,19 @@ application scope through `x-required-scope`. This extension is used because
 the authorization server and OAuth flow are deployment concerns, while the API
 is responsible for JWT bearer-token validation.
 
-Do not expose a Swagger UI or documentation endpoint from the application in
-this phase.
+The application packages this exact reviewed file and serves it at
+`/openapi/banking-api.json`. Swagger UI loads that resource rather than a
+separately generated contract. Runtime OpenAPI generation is disabled to
+preserve one source of truth.
 
 ## Consequences
 
 - client tooling can consume the contract without running the service;
 - pull requests clearly show API contract changes;
 - undocumented or obsolete routes fail the build;
+- developers can explore the reviewed contract through `/swagger-ui.html`;
+- the packaged and repository contracts are checked for exact structural
+  equality;
 - schema details still require deliberate review because route comparison
   cannot prove that every JSON field matches its Java DTO;
-- a later phase can add schema-level conformance testing or publish the
-  contract as a release artifact.
+- CI publishes the contract as a build artifact.

@@ -127,6 +127,8 @@ On Linux or macOS:
 
 The complete endpoint reference is available in
 [`docs/api.md`](docs/api.md).
+With the application running, interactive API documentation is available at
+`http://localhost:8080/swagger-ui.html`.
 
 ## Continuous integration
 
@@ -147,7 +149,7 @@ The current modular-monolith implementation includes:
 - atomic transfer application boundaries with paired ledger records
 - retry-safe deposits, withdrawals, and transfers using idempotency keys
 - cursor-paginated, newest-first account transaction history
-- a version-controlled OpenAPI 3.1 contract with route, DTO, type, enum, and validation-constraint drift verification
+- a version-controlled OpenAPI 3.1 contract with runtime Swagger UI and route, DTO, type, enum, and validation-constraint drift verification
 - optional OAuth 2.0 JWT authentication with scope-based authorization
 - health probes, Prometheus metrics, and request correlation IDs
 - reproducible CI verification and non-root container packaging
