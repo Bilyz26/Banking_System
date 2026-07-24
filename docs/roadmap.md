@@ -39,7 +39,7 @@ its tests and documentation are updated.
 | 18 | Add Architecture Tests and Static Analysis | Complete | ArchUnit, Enforcer, Checkstyle, SpotBugs, and JaCoCo gates run during verification. |
 | 19 | Add Docker and Local Deployment Configuration | Complete | Compose provides PostgreSQL, Keycloak, secure application startup, health ordering, environment templates, and a verified local workflow. |
 | 20 | Add GitHub Actions Continuous Integration | Complete | Java 21 verification and container-image build jobs are active ahead of sequence. |
-| 21 | Complete Security and Production-Readiness Review | Planned | Scheduled after local deployment is complete. |
+| 21 | Complete Security and Production-Readiness Review | Complete | Automated dependency, secret, configuration, and image scans enforce the documented threat model and production-readiness boundary. |
 | 22 | Final Documentation and Open-Source Preparation | Planned | Scheduled after the production-readiness review. |
 | 23 | Release Version 1.0.0 | Planned | Scheduled after all release criteria pass. |
 
