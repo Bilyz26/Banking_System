@@ -15,7 +15,8 @@ RUN ./mvnw --batch-mode --no-transfer-progress -DskipTests package \
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
 
-RUN addgroup -S banking \
+RUN apk upgrade --no-cache \
+    && addgroup -S banking \
     && adduser -S -G banking -h /app banking
 
 WORKDIR /app

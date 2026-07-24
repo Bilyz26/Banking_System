@@ -1,0 +1,17 @@
+server:
+  forward-headers-strategy: framework
+  shutdown: graceful
+
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: ${BANKING_SHUTDOWN_TIMEOUT:30s}
+  datasource:
+    hikari:
+      connection-timeout: ${BANKING_DB_CONNECTION_TIMEOUT:5s}
+      validation-timeout: ${BANKING_DB_VALIDATION_TIMEOUT:3s}
+      max-lifetime: ${BANKING_DB_MAX_LIFETIME:30m}
+
+management:
+  endpoint:
+    health:
+      show-details: never
