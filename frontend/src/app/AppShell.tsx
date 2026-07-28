@@ -8,6 +8,7 @@ const navigation = [
   { label: "Customers", path: "/customers", icon: "C" },
   { label: "Accounts", path: "/accounts", icon: "A" },
   { label: "Money", path: "/money", icon: "M" },
+  { label: "Transfers", path: "/transfers", icon: "X" },
   { label: "Transactions", path: "/transactions", icon: "T" },
 ] as const;
 

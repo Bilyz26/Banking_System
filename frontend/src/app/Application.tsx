@@ -10,6 +10,7 @@ import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { CustomerPage } from "../features/customers/CustomerPage";
 import { AccountPage } from "../features/accounts/AccountPage";
 import { MoneyOperationPage } from "../features/money/MoneyOperationPage";
+import { TransferPage } from "../features/transfers/TransferPage";
 import { NotFoundPage } from "../shared/components/NotFoundPage";
 import { PlaceholderPage } from "../shared/components/PlaceholderPage";
 
@@ -54,12 +55,19 @@ const transactionsRoute = createRoute({
   component: () => <PlaceholderPage title="Transactions" />,
 });
 
+const transfersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/transfers",
+  component: TransferPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardRoute,
   customersRoute,
   accountsRoute,
   moneyRoute,
+  transfersRoute,
   transactionsRoute,
 ]);
 const router = createRouter({ routeTree });
