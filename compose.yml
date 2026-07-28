@@ -1,4 +1,27 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /backend
+        VITE_OIDC_ISSUER_URL: ${BANKING_JWT_ISSUER_URI:-http://localhost:9000/realms/banking}
+        VITE_OIDC_CLIENT_ID: banking-web
+    ports:
+      - "127.0.0.1:${BANKING_FRONTEND_PORT:-3000}:8080"
+    depends_on:
+      application:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: [CMD, wget, --quiet, --spider, http://127.0.0.1:8080/healthz]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   application:
     build:
       context: .
