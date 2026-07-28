@@ -1,7 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { Application } from "./Application";
+
+vi.mock("react-oidc-context", () => ({
+  useAuth: () => ({
+    user: { profile: { name: "Test Operator" } },
+    signoutRedirect: vi.fn(),
+  }),
+}));
 
 describe("AppShell", () => {
   it("provides primary and mobile navigation", async () => {

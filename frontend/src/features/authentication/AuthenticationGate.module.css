@@ -1,0 +1,21 @@
+.center {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: var(--space-5);
+  background:
+    radial-gradient(circle, rgb(255 46 76 / 14%), transparent 28rem),
+    var(--color-canvas);
+}
+
+.center > section {
+  width: min(100%, 32rem);
+}
+
+.eyebrow {
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
