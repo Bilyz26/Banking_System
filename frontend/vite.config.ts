@@ -14,7 +14,20 @@ export default defineConfig({
     },
   },
   test: {
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/main.tsx", "src/vite-env.d.ts"],
+      thresholds: {
+        statements: 25,
+        branches: 20,
+        functions: 25,
+        lines: 25,
+      },
+    },
     environment: "jsdom",
+    exclude: ["e2e/**", "node_modules/**", "dist/**"],
     setupFiles: "./src/test/setup.ts",
   },
 });
