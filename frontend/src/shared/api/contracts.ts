@@ -59,3 +59,22 @@ export const accountStatusSchema = z.object({
 });
 
 export type OpenAccountRequest = z.infer<typeof openAccountSchema>;
+
+export const moneyOperationRequestSchema = z.object({
+  amount: z.number().positive().multipleOf(0.01),
+  currencyCode: z.string().regex(/^[A-Z]{3}$/),
+  description: z.string().max(500).nullable().optional(),
+});
+
+export const moneyOperationResponseSchema = z.object({
+  accountId: z.uuid(),
+  ledgerEntryId: z.uuid(),
+  transactionId: z.uuid(),
+  balance: z.number(),
+  currencyCode: z.string().regex(/^[A-Z]{3}$/),
+});
+
+export type MoneyOperationRequest = z.infer<typeof moneyOperationRequestSchema>;
+export type MoneyOperationResponse = z.infer<
+  typeof moneyOperationResponseSchema
+>;
