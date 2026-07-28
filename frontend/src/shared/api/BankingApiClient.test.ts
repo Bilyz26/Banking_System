@@ -53,4 +53,22 @@ describe("BankingApiClient", () => {
       }),
     );
   });
+
+  it("sends idempotency headers with financial requests", async () => {
+    const request = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify(account), { status: 200 }),
+      );
+    const client = new BankingApiClient("/backend", "token", request);
+
+    await client.post("/operation", { amount: 10 }, accountSchema, {
+      "Idempotency-Key": "93c937a8-a1f1-4c98-ac2b-4a0430d43575",
+    });
+
+    const [, options] = request.mock.calls[0] ?? [];
+    expect(new Headers(options?.headers).get("Idempotency-Key")).toBe(
+      "93c937a8-a1f1-4c98-ac2b-4a0430d43575",
+    );
+  });
 });
