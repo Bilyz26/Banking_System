@@ -11,8 +11,8 @@ import { CustomerPage } from "../features/customers/CustomerPage";
 import { AccountPage } from "../features/accounts/AccountPage";
 import { MoneyOperationPage } from "../features/money/MoneyOperationPage";
 import { TransferPage } from "../features/transfers/TransferPage";
+import { TransactionHistoryPage } from "../features/transactions/TransactionHistoryPage";
 import { NotFoundPage } from "../shared/components/NotFoundPage";
-import { PlaceholderPage } from "../shared/components/PlaceholderPage";
 
 const rootRoute = createRootRoute({
   component: AppShell,
@@ -52,7 +52,7 @@ const moneyRoute = createRoute({
 const transactionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/transactions",
-  component: () => <PlaceholderPage title="Transactions" />,
+  component: TransactionHistoryPage,
 });
 
 const transfersRoute = createRoute({
