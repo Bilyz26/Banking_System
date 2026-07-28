@@ -22,4 +22,21 @@ describe("ConfirmationDialog", () => {
     await user.keyboard("{Escape}");
     expect(cancel).toHaveBeenCalledOnce();
   });
+
+  it("keeps keyboard focus inside the dialog", async () => {
+    const user = userEvent.setup();
+    render(
+      <ConfirmationDialog
+        confirmLabel="Confirm"
+        description="Review this action."
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+        title="Confirm action"
+      />,
+    );
+    await user.keyboard("{Shift>}{Tab}{/Shift}");
+    expect(screen.getByRole("button", { name: "Confirm" })).toHaveFocus();
+    await user.keyboard("{Tab}");
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
+  });
 });

@@ -20,6 +20,9 @@ export function AppShell() {
 
   return (
     <div className={styles.layout}>
+      <a className={styles.skipLink} href="#main-content">
+        Skip to main content
+      </a>
       <aside className={styles.sidebar}>
         <Link
           className={styles.brand}
@@ -80,7 +83,7 @@ export function AppShell() {
           </button>
         </header>
 
-        <div className={styles.content}>
+        <div className={styles.content} id="main-content" tabIndex={-1}>
           <Outlet />
         </div>
       </div>
