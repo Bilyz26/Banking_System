@@ -1,4 +1,5 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { useAuth } from "react-oidc-context";
 
 import styles from "./AppShell.module.css";
 
@@ -11,6 +12,7 @@ const navigation = [
 ] as const;
 
 export function AppShell() {
+  const authentication = useAuth();
   const currentPath = useRouterState({
     select: (state) => state.location.pathname,
   });
@@ -60,13 +62,19 @@ export function AppShell() {
             <span className={styles.eyebrow}>Operations portal</span>
             <p className={styles.context}>Authenticated banking workspace</p>
           </div>
-          <button className={styles.userMenu} type="button">
+          <button
+            className={styles.userMenu}
+            onClick={() => void authentication.signoutRedirect()}
+            type="button"
+          >
             <span className={styles.avatar} aria-hidden="true">
               BA
             </span>
             <span className={styles.userDetails}>
-              <strong>Bank operator</strong>
-              <small>View session</small>
+              <strong>
+                {authentication.user?.profile.name ?? "Bank operator"}
+              </strong>
+              <small>Sign out</small>
             </span>
           </button>
         </header>

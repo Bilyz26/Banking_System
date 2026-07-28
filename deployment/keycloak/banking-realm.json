@@ -55,6 +55,34 @@
         "banking.admin",
         "banking.monitor"
       ]
+    },
+    {
+      "clientId": "banking-web",
+      "name": "Banking System Web",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*##http://127.0.0.1:5173/*"
+      },
+      "defaultClientScopes": [
+        "profile",
+        "email",
+        "banking.read",
+        "banking.write",
+        "banking.admin"
+      ]
     }
   ],
   "users": [
