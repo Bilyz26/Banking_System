@@ -22,11 +22,31 @@ export class BankingApiClient {
   ) {}
 
   async get<T>(path: string, schema: ZodType<T>): Promise<T> {
+    return this.send("GET", path, schema);
+  }
+
+  async post<T>(path: string, body: unknown, schema: ZodType<T>): Promise<T> {
+    return this.send("POST", path, schema, body);
+  }
+
+  async put<T>(path: string, body: unknown, schema: ZodType<T>): Promise<T> {
+    return this.send("PUT", path, schema, body);
+  }
+
+  private async send<T>(
+    method: "GET" | "POST" | "PUT",
+    path: string,
+    schema: ZodType<T>,
+    body?: unknown,
+  ): Promise<T> {
     const response = await this.request(`${this.baseUrl}${path}`, {
+      method,
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${this.accessToken}`,
+        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       },
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
 
     if (!response.ok) {
