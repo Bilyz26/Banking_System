@@ -12,7 +12,7 @@ import {
 import { useBankingApi } from "../../shared/api/useBankingApi";
 import { Button } from "../../shared/design-system/components/Button";
 import { Surface } from "../../shared/design-system/components/Surface";
-import styles from "./CustomerPage.module.css";
+import styles from "../../shared/design-system/workspace.module.css";
 
 const customerIdSchema = z.uuid("Enter a valid customer UUID.");
 const emptyProfile: CustomerProfile = { fullName: "", emailAddress: "" };

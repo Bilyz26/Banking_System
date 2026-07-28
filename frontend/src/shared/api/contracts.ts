@@ -47,3 +47,15 @@ export const customerSchema = customerProfileSchema.extend({
 
 export type Customer = z.infer<typeof customerSchema>;
 export type CustomerProfile = z.infer<typeof customerProfileSchema>;
+
+export const openAccountSchema = z.object({
+  ownerId: z.uuid(),
+  currencyCode: z.string().regex(/^[A-Z]{3}$/),
+});
+
+export const accountStatusSchema = z.object({
+  accountId: z.uuid(),
+  status: z.enum(["ACTIVE", "FROZEN", "CLOSED"]),
+});
+
+export type OpenAccountRequest = z.infer<typeof openAccountSchema>;

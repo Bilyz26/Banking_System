@@ -8,6 +8,7 @@ import {
 import { AppShell } from "./AppShell";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { CustomerPage } from "../features/customers/CustomerPage";
+import { AccountPage } from "../features/accounts/AccountPage";
 import { NotFoundPage } from "../shared/components/NotFoundPage";
 import { PlaceholderPage } from "../shared/components/PlaceholderPage";
 
@@ -37,7 +38,7 @@ const customersRoute = createRoute({
 const accountsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/accounts",
-  component: () => <PlaceholderPage title="Accounts" />,
+  component: AccountPage,
 });
 
 const moneyRoute = createRoute({

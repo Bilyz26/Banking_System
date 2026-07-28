@@ -15,7 +15,8 @@
   color: var(--color-text-muted);
 }
 
-.form input {
+.form input,
+.form select {
   min-height: 2.75rem;
   padding: var(--space-3);
   border: 1px solid var(--color-border);
@@ -26,12 +27,18 @@
 
 .details {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .identifier {
   color: var(--color-text-muted);
   overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
 
 @media (max-width: 55rem) {
