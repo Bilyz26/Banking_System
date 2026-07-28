@@ -21,6 +21,7 @@ export function ConfirmationDialog({
   onConfirm,
 }: ConfirmationDialogProps) {
   const cancelButton = useRef<HTMLButtonElement>(null);
+  const dialog = useRef<HTMLElement>(null);
 
   useEffect(() => {
     cancelButton.current?.focus();
@@ -31,6 +32,21 @@ export function ConfirmationDialog({
       className={styles.backdrop}
       onKeyDown={(event) => {
         if (event.key === "Escape" && !busy) onCancel();
+        if (event.key === "Tab") {
+          const controls = dialog.current?.querySelectorAll<HTMLButtonElement>(
+            "button:not(:disabled)",
+          );
+          if (!controls?.length) return;
+          const first = controls[0];
+          const last = controls[controls.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last?.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first?.focus();
+          }
+        }
       }}
     >
       <section
@@ -38,6 +54,7 @@ export function ConfirmationDialog({
         aria-labelledby="confirmation-title"
         aria-modal="true"
         className={styles.dialog}
+        ref={dialog}
         role="alertdialog"
       >
         <h2 id="confirmation-title">{title}</h2>
