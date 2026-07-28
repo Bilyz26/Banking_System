@@ -1,4 +1,8 @@
-import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+  type PropsWithChildren,
+} from "react";
 
 import styles from "./Button.module.css";
 
@@ -9,17 +13,24 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   busy?: boolean;
 }
 
-export function Button({
-  busy = false,
-  children,
-  disabled,
-  type = "button",
-  variant = "primary",
-  ...properties
-}: PropsWithChildren<ButtonProps>) {
+export const Button = forwardRef<
+  HTMLButtonElement,
+  PropsWithChildren<ButtonProps>
+>(function Button(
+  {
+    busy = false,
+    children,
+    disabled,
+    type = "button",
+    variant = "primary",
+    ...properties
+  },
+  ref,
+) {
   return (
     <button
       {...properties}
+      ref={ref}
       aria-busy={busy || undefined}
       className={`${styles.button} ${styles[variant]}`}
       disabled={disabled || busy}
@@ -29,4 +40,4 @@ export function Button({
       {busy && <span className={styles.hidden}>{children}</span>}
     </button>
   );
-}
+});
