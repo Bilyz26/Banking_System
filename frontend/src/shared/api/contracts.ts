@@ -35,3 +35,15 @@ export const apiErrorSchema = z.object({
 export type Account = z.infer<typeof accountSchema>;
 export type Transaction = z.infer<typeof transactionSchema>;
 export type TransactionPage = z.infer<typeof transactionPageSchema>;
+
+export const customerProfileSchema = z.object({
+  fullName: z.string().trim().min(1).max(200),
+  emailAddress: z.email().max(320),
+});
+
+export const customerSchema = customerProfileSchema.extend({
+  customerId: z.uuid(),
+});
+
+export type Customer = z.infer<typeof customerSchema>;
+export type CustomerProfile = z.infer<typeof customerProfileSchema>;
