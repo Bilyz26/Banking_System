@@ -8,8 +8,10 @@ Copy `.env.example` to `.env`, then run:
 docker compose up --build --detach --wait
 ```
 
-The local environment contains PostgreSQL, Keycloak, and the API. It is for
-development and verification only. Validate it with:
+The local environment contains PostgreSQL, Keycloak, the API, and the banking
+frontend. Open the frontend at `http://localhost:3000`; the API remains
+available at `http://localhost:8080`. This environment is for development and
+verification only. Validate it with:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `

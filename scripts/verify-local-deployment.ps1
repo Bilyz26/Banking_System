@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$ApplicationUrl = "http://localhost:8080",
+    [string]$FrontendUrl = "http://localhost:3000",
     [string]$IdentityProviderUrl = "http://localhost:9000",
     [string]$Username = "banking-developer",
     [string]$Password = "banking-local-change-me"
@@ -14,6 +15,9 @@ if (-not [Uri]::IsWellFormedUriString($ApplicationUrl, [UriKind]::Absolute)) {
 if (-not [Uri]::IsWellFormedUriString($IdentityProviderUrl, [UriKind]::Absolute)) {
     throw "IdentityProviderUrl must be an absolute URL."
 }
+if (-not [Uri]::IsWellFormedUriString($FrontendUrl, [UriKind]::Absolute)) {
+    throw "FrontendUrl must be an absolute URL."
+}
 if ([string]::IsNullOrWhiteSpace($Username) -or [string]::IsNullOrWhiteSpace($Password)) {
     throw "Username and Password must not be blank."
 }
@@ -23,6 +27,17 @@ $readiness = Invoke-RestMethod `
     -Method Get
 if ($readiness.status -ne "UP") {
     throw "Application readiness status is '$($readiness.status)', expected 'UP'."
+}
+
+$frontendResponse = Invoke-WebRequest `
+    -Uri "$FrontendUrl/dashboard" `
+    -Method Get `
+    -UseBasicParsing
+if ($frontendResponse.StatusCode -ne 200 -or $frontendResponse.Content -notmatch "Banking System") {
+    throw "Frontend did not return the Banking System application shell."
+}
+if ($frontendResponse.Headers["X-Content-Type-Options"] -ne "nosniff") {
+    throw "Frontend security headers are missing."
 }
 
 $tokenResponse = Invoke-RestMethod `
@@ -85,6 +100,7 @@ if ($deposit.balance -ne 25.00) {
 
 [pscustomobject]@{
     Readiness = $readiness.status
+    Frontend = $FrontendUrl
     TokenIssuer = $IdentityProviderUrl
     CustomerId = $customer.customerId
     AccountId = $account.accountId
