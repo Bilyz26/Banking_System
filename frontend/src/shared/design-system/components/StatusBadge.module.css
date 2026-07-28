@@ -1,0 +1,27 @@
+.badge {
+  display: inline-flex;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.neutral {
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+}
+
+.success {
+  color: var(--color-success);
+  background: var(--color-success-surface);
+}
+
+.warning {
+  color: var(--color-warning);
+  background: var(--color-warning-surface);
+}
+
+.danger {
+  color: var(--color-danger);
+  background: var(--color-danger-surface);
+}
