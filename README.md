@@ -1,11 +1,13 @@
 # Banking System
 
-[![Continuous Integration](https://github.com/Bilyz26/Banking_System/actions/workflows/ci.yml/badge.svg)](https://github.com/Bilyz26/Banking_System/actions/workflows/ci.yml)
-[![Security](https://github.com/Bilyz26/Banking_System/actions/workflows/security.yml/badge.svg)](https://github.com/Bilyz26/Banking_System/actions/workflows/security.yml)
+[![Continuous Integration](https://github.com/Bilyz26/Banking_System_Java/actions/workflows/ci.yml/badge.svg)](https://github.com/Bilyz26/Banking_System_Java/actions/workflows/ci.yml)
+[![Frontend CI](https://github.com/Bilyz26/Banking_System_Java/actions/workflows/frontend.yml/badge.svg)](https://github.com/Bilyz26/Banking_System_Java/actions/workflows/frontend.yml)
+[![Security](https://github.com/Bilyz26/Banking_System_Java/actions/workflows/security.yml/badge.svg)](https://github.com/Bilyz26/Banking_System_Java/actions/workflows/security.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-A production-oriented banking REST API built incrementally with Java, Spring Boot,
-Clean Architecture, and package-by-feature organization.
+A production-oriented banking system with a Java/Spring Boot REST API and a
+React/TypeScript web application, built with Clean Architecture and
+package-by-feature organization.
 
 > This project is an engineering reference implementation. It is not certified
 > to hold real funds or satisfy financial regulation without an independent
@@ -37,6 +39,7 @@ The authoritative delivery phases and their current status are recorded in
 ## Requirements
 
 - Java 21
+- Node.js 20.17 or newer
 - Docker Desktop or Docker Engine with Compose
 
 `JAVA_HOME` must point to the Java 21 installation, or Java must be available on
@@ -75,6 +78,7 @@ docker compose up --build --detach
 
 Compose starts:
 
+- the banking web application at `http://localhost:3000`;
 - the banking API at `http://localhost:8080`;
 - PostgreSQL at `localhost:5432`;
 - Keycloak at `http://localhost:9000`.
@@ -101,6 +105,9 @@ docker compose ps
 docker compose logs --follow application
 docker compose down
 ```
+
+For frontend-only development, commands, environment variables, architecture,
+and test guidance, see [`frontend/README.md`](frontend/README.md).
 
 Use `docker compose down --volumes` only when you intentionally want to delete
 all local banking data and recreate the environment. The values in
@@ -180,7 +187,10 @@ line-coverage baseline. Reports are generated under `target/site`.
 The GitHub Actions workflow in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 runs the Maven `verify` lifecycle with Java 21, uploads the executable JAR, and
 builds the production container image. Pull requests must pass this workflow
-before they are merged.
+before they are merged. The dedicated
+[frontend workflow](.github/workflows/frontend.yml) enforces formatting, static
+analysis, coverage, accessibility, browser smoke tests, bundle budgets, and
+container reproducibility.
 
 ## Current implementation
 
@@ -200,6 +210,8 @@ The current modular-monolith implementation includes:
 - reproducible CI verification and non-root container packaging
 - REST endpoints with request validation and stable error responses
 - unit and end-to-end MockMvc tests
+- an accessible React banking workspace for customer, account, money movement,
+  transfer, dashboard, and transaction-history workflows
 
 The default profile uses in-memory adapters for quick local work. The
 `postgresql` profile provides durable JDBC repositories, Flyway migrations,

@@ -13,7 +13,7 @@ export function createAuthConfig(
     redirect_uri: `${origin}/dashboard`,
     post_logout_redirect_uri: origin,
     response_type: "code",
-    scope: "openid profile email banking.read banking.write banking.admin",
+    scope: "openid banking.read banking.write banking.admin",
     automaticSilentRenew: true,
     monitorSession: true,
     stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
