@@ -38,7 +38,7 @@ jobs:
           format: table
 
   container-scan:
-    name: Scan container image
+    name: Scan backend container image
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -53,6 +53,28 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: banking-system:security-scan
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+
+  frontend-container-scan:
+    name: Scan frontend container image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Build image
+        run: docker build --tag banking-frontend:security-scan frontend
+
+      - name: Scan operating system and application dependencies
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: banking-frontend:security-scan
           scanners: vuln
           severity: HIGH,CRITICAL
           ignore-unfixed: true
