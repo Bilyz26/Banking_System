@@ -4,15 +4,60 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
+import { lazy, Suspense, type ComponentType } from "react";
 
 import { AppShell } from "./AppShell";
-import { DashboardPage } from "../features/dashboard/DashboardPage";
-import { CustomerPage } from "../features/customers/CustomerPage";
-import { AccountPage } from "../features/accounts/AccountPage";
-import { MoneyOperationPage } from "../features/money/MoneyOperationPage";
-import { TransferPage } from "../features/transfers/TransferPage";
-import { TransactionHistoryPage } from "../features/transactions/TransactionHistoryPage";
 import { NotFoundPage } from "../shared/components/NotFoundPage";
+
+function lazyNamedPage<TModule, TExport extends keyof TModule>(
+  importer: () => Promise<TModule>,
+  exportName: TExport,
+) {
+  return lazy(async () => ({
+    default: (await importer())[exportName] as ComponentType,
+  }));
+}
+
+const DashboardPage = lazyNamedPage(
+  () => import("../features/dashboard/DashboardPage"),
+  "DashboardPage",
+);
+const CustomerPage = lazyNamedPage(
+  () => import("../features/customers/CustomerPage"),
+  "CustomerPage",
+);
+const AccountPage = lazyNamedPage(
+  () => import("../features/accounts/AccountPage"),
+  "AccountPage",
+);
+const MoneyOperationPage = lazyNamedPage(
+  () => import("../features/money/MoneyOperationPage"),
+  "MoneyOperationPage",
+);
+const TransferPage = lazyNamedPage(
+  () => import("../features/transfers/TransferPage"),
+  "TransferPage",
+);
+const TransactionHistoryPage = lazyNamedPage(
+  () => import("../features/transactions/TransactionHistoryPage"),
+  "TransactionHistoryPage",
+);
+
+function renderLazyPage(Page: ComponentType) {
+  return function LazyPageRoute() {
+    return (
+      <Suspense
+        fallback={
+          <p aria-live="polite" role="status">
+            Loading page…
+          </p>
+        }
+      >
+        <Page />
+      </Suspense>
+    );
+  };
+}
 
 const rootRoute = createRootRoute({
   component: AppShell,
@@ -22,43 +67,43 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: DashboardPage,
+  component: renderLazyPage(DashboardPage),
 });
 
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
-  component: DashboardPage,
+  component: renderLazyPage(DashboardPage),
 });
 
 const customersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/customers",
-  component: CustomerPage,
+  component: renderLazyPage(CustomerPage),
 });
 
 const accountsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/accounts",
-  component: AccountPage,
+  component: renderLazyPage(AccountPage),
 });
 
 const moneyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/money",
-  component: MoneyOperationPage,
+  component: renderLazyPage(MoneyOperationPage),
 });
 
 const transactionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/transactions",
-  component: TransactionHistoryPage,
+  component: renderLazyPage(TransactionHistoryPage),
 });
 
 const transfersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/transfers",
-  component: TransferPage,
+  component: renderLazyPage(TransferPage),
 });
 
 const routeTree = rootRoute.addChildren([

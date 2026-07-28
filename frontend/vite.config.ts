@@ -3,6 +3,18 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          authentication: ["oidc-client-ts", "react-oidc-context"],
+          query: ["@tanstack/react-query"],
+          router: ["@tanstack/react-router"],
+          validation: ["react-hook-form", "zod"],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {
