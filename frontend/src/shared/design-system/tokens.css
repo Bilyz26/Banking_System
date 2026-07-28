@@ -1,0 +1,35 @@
+:root {
+  color-scheme: dark;
+  --color-canvas: #0b0e14;
+  --color-surface: #161b26;
+  --color-surface-raised: #1c2330;
+  --color-border: rgb(255 255 255 / 10%);
+  --color-text: #f7f8fa;
+  --color-text-muted: #aeb7c6;
+  --color-primary: #ff2e4c;
+  --color-primary-hover: #ff536a;
+  --color-primary-contrast: #160307;
+  --color-success: #34d399;
+  --color-success-surface: rgb(16 185 129 / 14%);
+  --color-warning: #fbbf24;
+  --color-warning-surface: rgb(251 191 36 / 14%);
+  --color-danger: #fb7185;
+  --color-danger-surface: rgb(251 113 133 / 14%);
+  --color-focus: #67e8f9;
+  --font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-pill: 9999px;
+  --transition-fast: 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+  }
+}
