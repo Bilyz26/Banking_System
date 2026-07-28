@@ -78,3 +78,29 @@ export type MoneyOperationRequest = z.infer<typeof moneyOperationRequestSchema>;
 export type MoneyOperationResponse = z.infer<
   typeof moneyOperationResponseSchema
 >;
+
+export const transferRequestSchema = moneyOperationRequestSchema
+  .extend({
+    sourceAccountId: z.uuid(),
+    destinationAccountId: z.uuid(),
+  })
+  .refine(
+    (request) => request.sourceAccountId !== request.destinationAccountId,
+    {
+      message: "Source and destination accounts must be different.",
+      path: ["destinationAccountId"],
+    },
+  );
+
+export const transferResponseSchema = z.object({
+  transactionId: z.uuid(),
+  sourceAccountId: z.uuid(),
+  sourceBalance: z.number(),
+  debitEntryId: z.uuid(),
+  destinationAccountId: z.uuid(),
+  destinationBalance: z.number(),
+  creditEntryId: z.uuid(),
+  currencyCode: z.string().regex(/^[A-Z]{3}$/),
+});
+
+export type TransferRequest = z.infer<typeof transferRequestSchema>;
