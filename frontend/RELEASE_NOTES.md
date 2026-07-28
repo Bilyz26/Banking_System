@@ -1,6 +1,9 @@
-# Frontend 0.1.0
+# Frontend 0.1.1
 
 Initial production-oriented frontend release.
+
+This patch rebuilds the runtime from current fixed Alpine packages and makes the
+non-root UID/GID explicit in the final image.
 
 ## Included
 

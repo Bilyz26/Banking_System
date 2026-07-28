@@ -16,8 +16,8 @@ version must exactly match `frontend/package.json`.
 ## Publish
 
 ```shell
-git tag -a frontend-v0.1.0 -m "Frontend 0.1.0"
-git push origin frontend-v0.1.0
+git tag -a frontend-v0.1.1 -m "Frontend 0.1.1"
+git push origin frontend-v0.1.1
 ```
 
 The frontend release workflow re-runs verification, browser tests, and the
