@@ -1,6 +1,7 @@
 package com.bankingsystem.account.domain;
 
 import com.bankingsystem.customer.domain.CustomerId;
+import com.bankingsystem.shared.domain.CurrencyMismatchException;
 import com.bankingsystem.shared.domain.Money;
 import org.junit.jupiter.api.Test;
 
@@ -61,6 +62,12 @@ class BankAccountTest {
         account.close();
 
         assertEquals(AccountStatus.CLOSED, account.status());
+        assertThrows(
+                AccountOperationNotAllowedException.class,
+                () -> account.deposit(Money.of("1.00", "USD")));
+        assertThrows(
+                AccountOperationNotAllowedException.class,
+                () -> account.withdraw(Money.of("1.00", "USD")));
     }
 
     @Test
@@ -75,6 +82,35 @@ class BankAccountTest {
                 () -> account.withdraw(Money.of("-1.00", "USD")));
     }
 
+    @Test
+    void currencyFailureDoesNotChangeBalance() {
+        BankAccount account = openUsdAccount();
+        account.deposit(Money.of("10.00", "USD"));
+
+        assertThrows(
+                CurrencyMismatchException.class,
+                () -> account.deposit(Money.of("5.00", "EUR")));
+        assertEquals(Money.of("10.00", "USD"), account.balance());
+    }
+
+    @Test
+    void restoresOnlyValidPersistedState() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> BankAccount.restore(
+                        AccountId.generate(),
+                        CustomerId.generate(),
+                        Money.of("-1.00", "USD"),
+                        AccountStatus.ACTIVE));
+        assertThrows(
+                NonZeroBalanceException.class,
+                () -> BankAccount.restore(
+                        AccountId.generate(),
+                        CustomerId.generate(),
+                        Money.of("1.00", "USD"),
+                        AccountStatus.CLOSED));
+    }
+
     private static BankAccount openUsdAccount() {
         return BankAccount.open(
                 AccountId.generate(),
@@ -82,4 +118,3 @@ class BankAccountTest {
                 Currency.getInstance("USD"));
     }
 }
-

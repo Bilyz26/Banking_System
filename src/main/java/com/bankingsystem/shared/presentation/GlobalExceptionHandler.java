@@ -1,13 +1,20 @@
 package com.bankingsystem.shared.presentation;
 
+import com.bankingsystem.account.application.AccountNotFoundException;
+import com.bankingsystem.account.application.ConcurrentAccountModificationException;
+import com.bankingsystem.customer.application.CustomerNotFoundException;
 import com.bankingsystem.customer.application.DuplicateCustomerEmailException;
 import com.bankingsystem.shared.application.ApplicationException;
+import com.bankingsystem.shared.application.IdempotencyConflictException;
 import com.bankingsystem.shared.domain.DomainException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -20,6 +27,38 @@ public final class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleDuplicateEmail(
             DuplicateCustomerEmailException exception) {
         return error(HttpStatus.CONFLICT, "CUSTOMER_EMAIL_ALREADY_EXISTS", exception.getMessage());
+    }
+
+    @ExceptionHandler(ConcurrentAccountModificationException.class)
+    public ResponseEntity<ApiError> handleConcurrentAccountModification(
+            ConcurrentAccountModificationException exception) {
+        return error(
+                HttpStatus.CONFLICT,
+                "CONCURRENT_ACCOUNT_MODIFICATION",
+                exception.getMessage());
+    }
+
+    @ExceptionHandler(IdempotencyConflictException.class)
+    public ResponseEntity<ApiError> handleIdempotencyConflict(
+            IdempotencyConflictException exception) {
+        return error(HttpStatus.CONFLICT, "IDEMPOTENCY_KEY_REUSED", exception.getMessage());
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ApiError> handleMissingHeader(
+            MissingRequestHeaderException exception) {
+        return error(
+                HttpStatus.BAD_REQUEST,
+                "MISSING_REQUIRED_HEADER",
+                "Required header '%s' is missing".formatted(exception.getHeaderName()));
+    }
+
+    @ExceptionHandler({AccountNotFoundException.class, CustomerNotFoundException.class})
+    public ResponseEntity<ApiError> handleResourceNotFound(ApplicationException exception) {
+        String errorCode = exception instanceof AccountNotFoundException
+                ? "ACCOUNT_NOT_FOUND"
+                : "CUSTOMER_NOT_FOUND";
+        return error(HttpStatus.NOT_FOUND, errorCode, exception.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -37,6 +76,17 @@ public final class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    @ExceptionHandler({
+            HttpMessageNotReadableException.class,
+            MethodArgumentTypeMismatchException.class
+    })
+    public ResponseEntity<ApiError> handleMalformedRequest(Exception exception) {
+        return error(
+                HttpStatus.BAD_REQUEST,
+                "MALFORMED_REQUEST",
+                "Request body or path parameter is malformed");
+    }
+
     @ExceptionHandler({IllegalArgumentException.class, DomainException.class})
     public ResponseEntity<ApiError> handleInvalidRequest(RuntimeException exception) {
         return error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", exception.getMessage());
@@ -44,7 +94,7 @@ public final class GlobalExceptionHandler {
 
     @ExceptionHandler(ApplicationException.class)
     public ResponseEntity<ApiError> handleApplicationFailure(ApplicationException exception) {
-        return error(HttpStatus.UNPROCESSABLE_ENTITY, "APPLICATION_RULE_VIOLATION", exception.getMessage());
+        return error(HttpStatus.UNPROCESSABLE_CONTENT, "APPLICATION_RULE_VIOLATION", exception.getMessage());
     }
 
     private static ResponseEntity<ApiError> error(
@@ -59,4 +109,3 @@ public final class GlobalExceptionHandler {
                 Map.of()));
     }
 }
-

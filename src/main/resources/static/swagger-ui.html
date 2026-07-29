@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Banking System API</title>
+    <link rel="stylesheet"
+          href="/webjars/swagger-ui/@swagger-ui.version@/swagger-ui.css">
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="/webjars/swagger-ui/@swagger-ui.version@/swagger-ui-bundle.js"></script>
+<script src="/webjars/swagger-ui/@swagger-ui.version@/swagger-ui-standalone-preset.js"></script>
+<script>
+    window.onload = () => SwaggerUIBundle({
+        url: "/openapi/banking-api.json",
+        dom_id: "#swagger-ui",
+        deepLinking: true,
+        displayRequestDuration: true,
+        operationsSorter: "method",
+        presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+        ],
+        layout: "StandaloneLayout"
+    });
+</script>
+</body>
+</html>

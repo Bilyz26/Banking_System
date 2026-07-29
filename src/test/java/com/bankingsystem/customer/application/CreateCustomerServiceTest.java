@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,6 +49,13 @@ class CreateCustomerServiceTest {
     private static final class InMemoryCustomerRepository implements CustomerRepository {
 
         private final Map<String, Customer> customersByEmail = new HashMap<>();
+
+        @Override
+        public Optional<Customer> findById(CustomerId customerId) {
+            return customersByEmail.values().stream()
+                    .filter(customer -> customer.id().equals(customerId))
+                    .findFirst();
+        }
 
         @Override
         public boolean existsByEmailAddress(String emailAddress) {

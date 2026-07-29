@@ -1,0 +1,764 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Banking System API",
+    "version": "1.0.0",
+    "description": "REST API for customer, account, ledger, and transfer operations."
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "Current server"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/customers": {
+      "post": {
+        "operationId": "createCustomer",
+        "summary": "Create a customer",
+        "x-required-scope": "banking.admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer created",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri-reference"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/customers/{customerId}": {
+      "parameters": [
+        {
+          "name": "customerId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getCustomer",
+        "summary": "Retrieve a customer",
+        "x-required-scope": "banking.read",
+        "responses": {
+          "200": {
+            "description": "Customer found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateCustomerProfile",
+        "summary": "Replace a customer's editable profile",
+        "x-required-scope": "banking.admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer profile updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/accounts": {
+      "post": {
+        "operationId": "openAccount",
+        "summary": "Open an account",
+        "x-required-scope": "banking.admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account opened",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/accounts/{accountId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/AccountId"
+        }
+      ],
+      "get": {
+        "operationId": "getAccount",
+        "summary": "Retrieve an account",
+        "x-required-scope": "banking.read",
+        "responses": {
+          "200": {
+            "description": "Account found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/accounts/{accountId}/freeze": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/AccountId"
+        }
+      ],
+      "post": {
+        "operationId": "freezeAccount",
+        "summary": "Freeze an active account",
+        "x-required-scope": "banking.admin",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AccountStatus"
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/accounts/{accountId}/unfreeze": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/AccountId"
+        }
+      ],
+      "post": {
+        "operationId": "unfreezeAccount",
+        "summary": "Reactivate a frozen account",
+        "x-required-scope": "banking.admin",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AccountStatus"
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/accounts/{accountId}/close": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/AccountId"
+        }
+      ],
+      "post": {
+        "operationId": "closeAccount",
+        "summary": "Close a zero-balance account",
+        "x-required-scope": "banking.admin",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AccountStatus"
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/accounts/{accountId}/deposits": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/AccountId"
+        },
+        {
+          "$ref": "#/components/parameters/IdempotencyKey"
+        }
+      ],
+      "post": {
+        "operationId": "depositMoney",
+        "summary": "Deposit money",
+        "x-required-scope": "banking.write",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/MoneyOperation"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MoneyOperation"
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/accounts/{accountId}/withdrawals": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/AccountId"
+        },
+        {
+          "$ref": "#/components/parameters/IdempotencyKey"
+        }
+      ],
+      "post": {
+        "operationId": "withdrawMoney",
+        "summary": "Withdraw money",
+        "x-required-scope": "banking.write",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/MoneyOperation"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MoneyOperation"
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/accounts/{accountId}/transactions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/AccountId"
+        }
+      ],
+      "get": {
+        "operationId": "getAccountTransactions",
+        "summary": "Retrieve account transaction history",
+        "x-required-scope": "banking.read",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Opaque cursor returned by the previous page.",
+            "schema": {
+              "type": "string",
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest-first transaction page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/transfers": {
+      "post": {
+        "operationId": "transferMoney",
+        "summary": "Transfer money between accounts",
+        "x-required-scope": "banking.write",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfer completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "OAuth 2.0 access token. Required scope is declared by x-required-scope."
+      }
+    },
+    "parameters": {
+      "AccountId": {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "requestBodies": {
+      "MoneyOperation": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/MoneyOperationRequest"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "AccountStatus": {
+        "description": "Account status changed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AccountStatus"
+            }
+          }
+        }
+      },
+      "MoneyOperation": {
+        "description": "Money operation completed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/MoneyOperationResponse"
+            }
+          }
+        }
+      },
+      "ApiError": {
+        "description": "Request or business-rule failure",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiError"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "CreateCustomerRequest": {
+        "type": "object",
+        "required": ["fullName", "emailAddress"],
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "emailAddress": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1,
+            "maxLength": 320
+          }
+        }
+      },
+      "UpdateCustomerProfileRequest": {
+        "type": "object",
+        "required": ["fullName", "emailAddress"],
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "emailAddress": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1,
+            "maxLength": 320
+          }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "required": ["customerId", "fullName", "emailAddress"],
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "emailAddress": {
+            "type": "string",
+            "format": "email"
+          }
+        }
+      },
+      "OpenAccountRequest": {
+        "type": "object",
+        "required": ["ownerId", "currencyCode"],
+        "properties": {
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currencyCode": {
+            "$ref": "#/components/schemas/CurrencyCode"
+          }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "required": ["accountId", "ownerId", "balance", "currencyCode", "status"],
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "balance": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "currencyCode": {
+            "$ref": "#/components/schemas/CurrencyCode"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AccountStatusValue"
+          }
+        }
+      },
+      "AccountStatus": {
+        "type": "object",
+        "required": ["accountId", "status"],
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AccountStatusValue"
+          }
+        }
+      },
+      "AccountStatusValue": {
+        "type": "string",
+        "enum": ["ACTIVE", "FROZEN", "CLOSED"]
+      },
+      "MoneyOperationRequest": {
+        "type": "object",
+        "required": ["amount", "currencyCode"],
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/PositiveAmount"
+          },
+          "currencyCode": {
+            "$ref": "#/components/schemas/CurrencyCode"
+          },
+          "description": {
+            "type": ["string", "null"],
+            "maxLength": 500
+          }
+        }
+      },
+      "MoneyOperationResponse": {
+        "type": "object",
+        "required": ["accountId", "ledgerEntryId", "transactionId", "balance", "currencyCode"],
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ledgerEntryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "balance": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "currencyCode": {
+            "$ref": "#/components/schemas/CurrencyCode"
+          }
+        }
+      },
+      "TransferRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MoneyOperationRequest"
+          },
+          {
+            "type": "object",
+            "required": ["sourceAccountId", "destinationAccountId"],
+            "properties": {
+              "sourceAccountId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "destinationAccountId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ]
+      },
+      "TransferResponse": {
+        "type": "object",
+        "required": [
+          "transactionId",
+          "sourceAccountId",
+          "sourceBalance",
+          "debitEntryId",
+          "destinationAccountId",
+          "destinationBalance",
+          "creditEntryId",
+          "currencyCode"
+        ],
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceBalance": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "debitEntryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationBalance": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "creditEntryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currencyCode": {
+            "$ref": "#/components/schemas/CurrencyCode"
+          }
+        }
+      },
+      "TransactionPage": {
+        "type": "object",
+        "required": ["transactions"],
+        "properties": {
+          "transactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Transaction"
+            }
+          },
+          "nextCursor": {
+            "type": ["string", "null"]
+          }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "required": [
+          "ledgerEntryId",
+          "transactionId",
+          "type",
+          "amount",
+          "balanceAfter",
+          "currencyCode",
+          "occurredAt"
+        ],
+        "properties": {
+          "ledgerEntryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["DEPOSIT", "WITHDRAWAL", "TRANSFER_DEBIT", "TRANSFER_CREDIT"]
+          },
+          "amount": {
+            "$ref": "#/components/schemas/PositiveAmount"
+          },
+          "balanceAfter": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "currencyCode": {
+            "$ref": "#/components/schemas/CurrencyCode"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": ["string", "null"]
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "required": ["timestamp", "status", "code", "message", "fieldErrors"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "fieldErrors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CurrencyCode": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 3,
+        "pattern": "^[A-Z]{3}$",
+        "example": "USD"
+      },
+      "Amount": {
+        "type": "number",
+        "multipleOf": 0.001
+      },
+      "PositiveAmount": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "exclusiveMaximum": 100000000000000000,
+        "multipleOf": 0.001
+      }
+    }
+  }
+}

@@ -3,25 +3,44 @@ package com.bankingsystem.customer.presentation;
 import com.bankingsystem.customer.application.port.in.CreateCustomerCommand;
 import com.bankingsystem.customer.application.port.in.CreateCustomerResult;
 import com.bankingsystem.customer.application.port.in.CreateCustomerUseCase;
+import com.bankingsystem.customer.application.port.in.GetCustomerQuery;
+import com.bankingsystem.customer.application.port.in.GetCustomerUseCase;
+import com.bankingsystem.customer.application.port.in.UpdateCustomerProfileCommand;
+import com.bankingsystem.customer.application.port.in.UpdateCustomerProfileUseCase;
+import com.bankingsystem.customer.domain.CustomerId;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/customers")
 public final class CustomerController {
 
     private final CreateCustomerUseCase createCustomerUseCase;
+    private final GetCustomerUseCase getCustomerUseCase;
+    private final UpdateCustomerProfileUseCase updateCustomerProfileUseCase;
 
-    public CustomerController(CreateCustomerUseCase createCustomerUseCase) {
+    public CustomerController(
+            CreateCustomerUseCase createCustomerUseCase,
+            GetCustomerUseCase getCustomerUseCase,
+            UpdateCustomerProfileUseCase updateCustomerProfileUseCase) {
         this.createCustomerUseCase =
                 Objects.requireNonNull(createCustomerUseCase, "create customer use case must not be null");
+        this.getCustomerUseCase =
+                Objects.requireNonNull(getCustomerUseCase, "get customer use case must not be null");
+        this.updateCustomerProfileUseCase = Objects.requireNonNull(
+                updateCustomerProfileUseCase,
+                "update customer profile use case must not be null");
     }
 
     @PostMapping
@@ -38,5 +57,21 @@ public final class CustomerController {
 
         return ResponseEntity.created(location).body(response);
     }
-}
 
+    @GetMapping("/{customerId}")
+    public CustomerResponse getCustomer(@PathVariable UUID customerId) {
+        return CustomerResponse.from(getCustomerUseCase.getCustomer(
+                new GetCustomerQuery(new CustomerId(customerId))));
+    }
+
+    @PutMapping("/{customerId}")
+    public CustomerResponse updateCustomerProfile(
+            @PathVariable UUID customerId,
+            @Valid @RequestBody UpdateCustomerProfileRequest request) {
+        return CustomerResponse.from(updateCustomerProfileUseCase.updateCustomerProfile(
+                new UpdateCustomerProfileCommand(
+                        new CustomerId(customerId),
+                        request.fullName(),
+                        request.emailAddress())));
+    }
+}

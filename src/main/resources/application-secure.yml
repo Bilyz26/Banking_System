@@ -1,0 +1,7 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${BANKING_JWT_ISSUER_URI:http://localhost:9000}
+          jwk-set-uri: ${BANKING_JWT_JWK_SET_URI:${BANKING_JWT_ISSUER_URI:http://localhost:9000}/protocol/openid-connect/certs}

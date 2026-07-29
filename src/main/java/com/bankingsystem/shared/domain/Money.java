@@ -10,12 +10,26 @@ import java.util.Objects;
  */
 public record Money(BigDecimal amount, Currency currency) implements Comparable<Money> {
 
-    private static final int SCALE = 2;
+    private static final int MAX_INTEGER_DIGITS = 17;
 
     public Money {
         Objects.requireNonNull(amount, "amount must not be null");
         Objects.requireNonNull(currency, "currency must not be null");
-        amount = amount.setScale(SCALE, RoundingMode.UNNECESSARY);
+
+        int currencyScale = currency.getDefaultFractionDigits();
+        if (currencyScale < 0) {
+            throw new UnsupportedCurrencyException(currency);
+        }
+
+        try {
+            amount = amount.setScale(currencyScale, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException exception) {
+            throw new InvalidMonetaryPrecisionException(amount, currency, currencyScale);
+        }
+        int integerDigits = amount.precision() - amount.scale();
+        if (integerDigits > MAX_INTEGER_DIGITS) {
+            throw new MonetaryAmountOutOfRangeException(MAX_INTEGER_DIGITS);
+        }
     }
 
     public static Money of(String amount, String currencyCode) {
@@ -63,4 +77,3 @@ public record Money(BigDecimal amount, Currency currency) implements Comparable<
         }
     }
 }
-

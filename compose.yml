@@ -1,0 +1,106 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /backend
+        VITE_OIDC_ISSUER_URL: ${BANKING_JWT_ISSUER_URI:-http://localhost:9000/realms/banking}
+        VITE_OIDC_CLIENT_ID: banking-web
+    ports:
+      - "127.0.0.1:${BANKING_FRONTEND_PORT:-3000}:8080"
+    depends_on:
+      application:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: [CMD, wget, --quiet, --spider, http://127.0.0.1:8080/healthz]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  application:
+    build:
+      context: .
+    environment:
+      SPRING_PROFILES_ACTIVE: ${BANKING_PROFILES:-postgresql,secure}
+      BANKING_DB_URL: jdbc:postgresql://postgres:5432/banking
+      BANKING_DB_USERNAME: ${BANKING_DB_USERNAME:-banking}
+      BANKING_DB_PASSWORD: ${BANKING_DB_PASSWORD:-banking-local-change-me}
+      BANKING_JWT_ISSUER_URI: ${BANKING_JWT_ISSUER_URI:-http://localhost:9000/realms/banking}
+      BANKING_JWT_JWK_SET_URI: http://keycloak:8080/realms/banking/protocol/openid-connect/certs
+    ports:
+      - "127.0.0.1:${BANKING_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --quiet
+        - --output-document=-
+        - http://localhost:8080/actuator/health/readiness
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: banking
+      POSTGRES_USER: ${BANKING_DB_USERNAME:-banking}
+      POSTGRES_PASSWORD: ${BANKING_DB_PASSWORD:-banking-local-change-me}
+    ports:
+      - "127.0.0.1:${BANKING_DB_PORT:-5432}:5432"
+    volumes:
+      - banking-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.0
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin-local-change-me}
+      KC_HEALTH_ENABLED: "true"
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL:-http://localhost:9000}
+    ports:
+      - "127.0.0.1:${KEYCLOAK_PORT:-9000}:8080"
+    volumes:
+      - ./deployment/keycloak/banking-realm.json:/opt/keycloak/data/import/banking-realm.json:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000;
+          printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3;
+          grep -q '200 OK' <&3
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  banking-postgres-data:
