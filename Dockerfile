@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:26-jdk-alpine AS build
 
 WORKDIR /workspace
 
@@ -13,7 +13,7 @@ COPY docs/openapi/ docs/openapi/
 RUN ./mvnw --batch-mode --no-transfer-progress -DskipTests package \
     && cp target/banking-system-*.jar /workspace/application.jar
 
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:26-jre-alpine AS runtime
 
 RUN apk upgrade --no-cache \
     && addgroup -S banking \
